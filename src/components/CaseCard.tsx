@@ -171,7 +171,7 @@ export function CaseCard({
   const swipedLeft = offset < -12
 
   return (
-    <article className={`case-card${item.completed ? ' is-completed' : ''}`}>
+    <article className={`case-card${item.completed ? ' is-completed' : ''}`} data-flip-id={item.id}>
       <div className="row-zone">
       <div className="swipe-layer" aria-hidden="true">
         <span

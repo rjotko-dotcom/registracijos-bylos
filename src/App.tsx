@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CaseDraft, RegistrationCase } from './types'
 import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
@@ -8,6 +8,36 @@ import { Icon } from './components/Icon'
 import { useScrolled } from './useScrolled'
 
 type View = 'active' | 'archive'
+
+// FLIP: when cards jump between sections (or reorder), animate them from
+// their previous position to the new one instead of teleporting
+function useFlipAnimations(deps: unknown[]) {
+  const positions = useRef(new Map<string, DOMRect>())
+  useLayoutEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const cards = document.querySelectorAll<HTMLElement>('[data-flip-id]')
+    const next = new Map<string, DOMRect>()
+    cards.forEach((el) => {
+      const id = el.dataset.flipId
+      if (!id) return
+      const rect = el.getBoundingClientRect()
+      next.set(id, rect)
+      const old = positions.current.get(id)
+      if (!reduce && old) {
+        const dx = old.left - rect.left
+        const dy = old.top - rect.top
+        if (Math.abs(dx) + Math.abs(dy) > 6) {
+          el.animate(
+            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+            { duration: 340, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+          )
+        }
+      }
+    })
+    positions.current = next
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+}
 
 function bylosWord(n: number): string {
   const last = n % 10
@@ -25,7 +55,8 @@ function matchesQuery(item: RegistrationCase, query: string): boolean {
     item.brand.toLowerCase().includes(q) ||
     item.vin.toLowerCase().includes(q) ||
     item.regNumber.toLowerCase().includes(q) ||
-    item.manager.toLowerCase().includes(q)
+    item.manager.toLowerCase().includes(q) ||
+    item.notes.toLowerCase().includes(q)
   )
 }
 
@@ -45,6 +76,19 @@ export default function App() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrolled = useScrolled()
+  const [today, setToday] = useState(() => new Date().toDateString())
+
+  useEffect(() => {
+    const refresh = () => setToday(new Date().toDateString())
+    const timer = window.setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [])
   const undoTimer = useRef<number | undefined>(undefined)
   const dataMsgTimer = useRef<number | undefined>(undefined)
 
@@ -82,7 +126,7 @@ export default function App() {
     const weekday = d.toLocaleDateString('lt-LT', { weekday: 'long' })
     const monthDay = d.toLocaleDateString('lt-LT', { month: 'long', day: 'numeric' })
     return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${monthDay}`
-  }, [])
+  }, [today])
 
   const visible = useMemo(() => {
     const inView = cases.filter((it) => (view === 'active' ? !it.completed : it.completed))
@@ -93,6 +137,8 @@ export default function App() {
         : (b.completedAt ?? 0) - (a.completedAt ?? 0),
     )
   }, [cases, view, searchOpen, query])
+
+  useFlipAnimations([cases, view, groupByManager, searchOpen, query])
 
   const update = (id: string, patch: Partial<RegistrationCase>) =>
     setCases((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)))
@@ -128,6 +174,7 @@ export default function App() {
   const handleConfirmComplete = () => {
     if (confirmId) {
       update(confirmId, { completed: true, completedAt: Date.now() })
+      navigator.vibrate?.(30)
       setExpandedId(null)
       setUndoId(confirmId)
       window.clearTimeout(undoTimer.current)
@@ -255,7 +302,7 @@ export default function App() {
             <input
               ref={searchInputRef}
               type="search"
-              placeholder="Modelis, VIN, numeris, vadybininkas…"
+              placeholder="Modelis, VIN, numeris, pastaba…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoComplete="off"

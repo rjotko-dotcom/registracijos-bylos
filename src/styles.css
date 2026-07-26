@@ -1226,6 +1226,72 @@ textarea {
   }
 }
 
+
+/* ============================================================
+   Forced-dark protection.
+   Chrome "Auto Dark" / Samsung forced dark re-map plain background
+   colors, washing the palette out. Single-color background-images
+   are exempt from those transforms, so every meaningful surface and
+   accent fill is pinned here. A faint hairline keeps card separation
+   readable even if a browser still manages to remap tones.
+   ============================================================ */
+
+body {
+  background-image: linear-gradient(var(--bg), var(--bg));
+}
+
+.case-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.case-card,
+.case-row {
+  background-image: linear-gradient(var(--surface), var(--surface));
+}
+
+.header-btn,
+.action-btn,
+.group-toggle,
+.brand-logo,
+.stepper button,
+.btn-ghost {
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+}
+
+.header-btn.accent,
+.group-toggle.active,
+.btn-primary {
+  background-image: linear-gradient(var(--accent), var(--accent));
+}
+
+.regitra-btn.active,
+.swipe-hint.armed,
+.btn-success {
+  background-image: linear-gradient(var(--ok), var(--ok));
+}
+
+.search-bar input,
+.field input,
+.field textarea,
+.toggle-row,
+.segmented,
+.stepper,
+.dialog-sheet {
+  background-image: linear-gradient(var(--surface), var(--surface));
+}
+
+.notes-input {
+  background-image: linear-gradient(var(--bg), var(--bg));
+}
+
+.undo-toast {
+  background-image: linear-gradient(rgba(46, 43, 53, 0.95), rgba(46, 43, 53, 0.95));
+}
+
+.app-header {
+  background-image: linear-gradient(rgba(14, 13, 16, 0.85), rgba(14, 13, 16, 0.85));
+}
+
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {

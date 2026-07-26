@@ -613,7 +613,8 @@ textarea {
 }
 
 .doc-btn.ok {
-  color: var(--ok);
+  color: var(--text-3);
+  opacity: 0.55;
 }
 
 .doc-btn.warn {
@@ -641,6 +642,44 @@ textarea {
 .regitra-status.active {
   color: var(--ok);
   opacity: 1;
+}
+
+/* ---------- Note preview strip ---------- */
+
+.note-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 14px 10px;
+  background: var(--surface-2);
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+  border-top: 1px solid var(--line);
+  color: var(--warn);
+  cursor: pointer;
+  animation: strip-in 0.22s ease;
+}
+
+.note-strip svg {
+  flex-shrink: 0;
+  margin-top: 2.5px;
+}
+
+.note-strip-text {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 0;
+}
+
+@keyframes strip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 /* ---------- Notes (expandable) ---------- */

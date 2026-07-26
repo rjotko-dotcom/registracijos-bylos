@@ -236,13 +236,13 @@ export function CaseCard({
         <button
           type="button"
           className={`icon-btn doc-btn ${item.techSheetNeeded ? 'warn' : 'ok'}`}
-          aria-label={item.techSheetNeeded ? 'Reikia techninio lapo' : 'Techninis lapas sutvarkytas'}
+          aria-label={item.techSheetNeeded ? 'Reikia techninio lapo' : 'Techninio lapo nereikia'}
           onClick={(e) => {
             e.stopPropagation()
             onToggleTechSheet(item.id)
           }}
         >
-          <Icon name={item.techSheetNeeded ? 'fileWarn' : 'fileCheck'} size={21} />
+          <Icon name={item.techSheetNeeded ? 'fileWarn' : 'fileOff'} size={21} />
         </button>
 
         <span
@@ -253,6 +253,13 @@ export function CaseCard({
           <Icon name="landmark" size={21} />
         </span>
       </div>
+
+      {item.notes && !expanded && (
+        <div className="note-strip" onClick={() => onToggleExpand(item.id)}>
+          <Icon name="note" size={14} strokeWidth={2} />
+          <span className="note-strip-text">{item.notes}</span>
+        </div>
+      )}
 
       <div className={`notes-wrap${expanded ? ' open' : ''}`}>
         <div className="notes-inner">

@@ -5,9 +5,13 @@
    ============================================================ */
 
 :root {
+  /* declared at :root to out-rank host wrappers that set color-scheme: light —
+     without this Chrome's Auto Dark Theme re-darkens the already-dark page */
+  color-scheme: dark;
+
   --bg: #0e0d10;
-  --surface: #211f26;
-  --surface-2: #2e2b35;
+  --surface: #242229;
+  --surface-2: #322f39;
   --line: #363340;
   --line-strong: #47434f;
 

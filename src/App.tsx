@@ -66,6 +66,22 @@ export default function App() {
     if (searchOpen) searchInputRef.current?.focus()
   }, [searchOpen])
 
+  const toTakeCount = useMemo(
+    () => cases.filter((it) => !it.completed && !it.regitraDone).length,
+    [cases],
+  )
+  const atRegitraCount = useMemo(
+    () => cases.filter((it) => !it.completed && it.regitraDone).length,
+    [cases],
+  )
+
+  const todayLabel = useMemo(() => {
+    const d = new Date()
+    const weekday = d.toLocaleDateString('lt-LT', { weekday: 'long' })
+    const monthDay = d.toLocaleDateString('lt-LT', { month: 'long', day: 'numeric' })
+    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${monthDay}`
+  }, [])
+
   const visible = useMemo(() => {
     const inView = cases.filter((it) => (view === 'active' ? !it.completed : it.completed))
     const filtered = searchOpen ? inView.filter((it) => matchesQuery(it, query)) : inView
@@ -255,7 +271,17 @@ export default function App() {
                 <Icon name="back" size={23} />
               </button>
             ) : null}
-            <h1 className="header-title">{view === 'active' ? 'Registracijos bylos' : 'Archyvas'}</h1>
+            {view === 'active' ? (
+              <div className="header-summary">
+                <span className="header-date">{todayLabel}</span>
+                <span className="header-counts">
+                  Vežti <strong>{toTakeCount}</strong> <span className="dot">·</span> Regitroje{' '}
+                  <strong>{atRegitraCount}</strong>
+                </span>
+              </div>
+            ) : (
+              <h1 className="header-title">Archyvas</h1>
+            )}
             <div className="header-actions">
               {view === 'active' && (
                 <button

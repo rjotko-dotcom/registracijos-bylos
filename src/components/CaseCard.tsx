@@ -245,18 +245,13 @@ export function CaseCard({
           <Icon name={item.techSheetNeeded ? 'fileWarn' : 'fileCheck'} size={21} />
         </button>
 
-        <button
-          type="button"
-          className={`icon-btn action-btn regitra-btn${item.regitraDone ? ' active' : ''}`}
+        <span
+          className={`regitra-status${item.regitraDone ? ' active' : ''}`}
+          role="img"
           aria-label={item.regitraDone ? 'Palikta Regitroje' : 'Nepalikta Regitroje'}
-          aria-pressed={item.regitraDone}
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleRegitra(item.id)
-          }}
         >
-          <Icon name="landmark" size={20} />
-        </button>
+          <Icon name="landmark" size={21} />
+        </span>
       </div>
 
       <div className={`notes-wrap${expanded ? ' open' : ''}`}>

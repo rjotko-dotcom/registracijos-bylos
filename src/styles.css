@@ -9,31 +9,31 @@
      without this Chrome's Auto Dark Theme re-darkens the already-dark page */
   color-scheme: dark;
 
-  --bg: #0e0d10;
-  --surface: #242229;
-  --surface-2: #322f39;
-  --line: #363340;
-  --line-strong: #47434f;
+  --bg: #0a0a0c;
+  --surface: #17171b;
+  --surface-2: #232329;
+  --line: #2a2a31;
+  --line-strong: #3b3b44;
 
-  --text: #f5f4f7;
-  --text-2: #b6b3c0;
-  --text-3: #8a8695;
+  --text: #f4f4f5;
+  --text-2: #a6a6af;
+  --text-3: #77777f;
 
-  --accent: #b1b3fa;
-  --accent-dim: rgba(177, 179, 250, 0.18);
-  --accent-line: rgba(177, 179, 250, 0.5);
-  --accent-2: #f6bd98;
-  --accent-2-dim: rgba(246, 189, 152, 0.17);
-  --accent-2-line: rgba(242, 178, 140, 0.45);
-  --ok: #7ee59a;
-  --ok-dim: rgba(126, 229, 154, 0.17);
-  --ok-line: rgba(113, 219, 140, 0.45);
-  --bad: #ff8a83;
-  --bad-dim: rgba(255, 138, 131, 0.16);
-  --bad-line: rgba(255, 125, 118, 0.45);
-  --warn: #f7cd77;
-  --on-accent: #17161c;
-  --on-ok: #0c2a17;
+  --accent: #0a84ff;
+  --accent-dim: rgba(10, 132, 255, 0.15);
+  --accent-line: rgba(10, 132, 255, 0.42);
+  --accent-2: #64d2ff;
+  --accent-2-dim: rgba(100, 210, 255, 0.14);
+  --accent-2-line: rgba(100, 210, 255, 0.42);
+  --ok: #30d158;
+  --ok-dim: rgba(48, 209, 88, 0.14);
+  --ok-line: rgba(48, 209, 88, 0.42);
+  --bad: #ff453a;
+  --bad-dim: rgba(255, 69, 58, 0.14);
+  --bad-line: rgba(255, 69, 58, 0.42);
+  --warn: #ff9f0a;
+  --on-accent: #ffffff;
+  --on-ok: #03290f;
 
   --r-card: 22px;
   --r-ctl: 14px;
@@ -119,7 +119,7 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(14, 13, 16, 0.85);
+  background: rgba(10, 10, 12, 0.85);
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
   backdrop-filter: blur(16px) saturate(1.3);
   border-bottom: 1px solid transparent;
@@ -488,7 +488,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #eae8f0;
+  color: #d9d9df;
   margin-right: 4px;
 }
 
@@ -624,27 +624,23 @@ textarea {
   background: var(--surface-2);
 }
 
-.action-btn {
-  width: 44px;
+.regitra-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
   height: 44px;
-  border: none;
-  background: var(--surface-2);
+  flex-shrink: 0;
   color: var(--text-3);
+  opacity: 0.55;
   transition:
     color 0.15s ease,
-    border-color 0.15s ease,
-    background-color 0.15s ease,
-    transform 0.12s ease;
+    opacity 0.15s ease;
 }
 
-.action-btn:active {
-  background: var(--surface-2);
-  transform: scale(0.92);
-}
-
-.regitra-btn.active {
-  color: var(--on-ok);
-  background: var(--ok);
+.regitra-status.active {
+  color: var(--ok);
+  opacity: 1;
 }
 
 /* ---------- Notes (expandable) ---------- */
@@ -1111,7 +1107,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: rgba(46, 43, 53, 0.95);
+  background: rgba(35, 35, 41, 0.95);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: none;
@@ -1220,9 +1216,8 @@ textarea {
     width: 34px;
   }
 
-  .action-btn {
-    width: 42px;
-    height: 42px;
+  .regitra-status {
+    width: 34px;
   }
 }
 
@@ -1250,7 +1245,6 @@ body {
 }
 
 .header-btn,
-.action-btn,
 .group-toggle,
 .brand-logo,
 .stepper button,
@@ -1264,7 +1258,6 @@ body {
   background-image: linear-gradient(var(--accent), var(--accent));
 }
 
-.regitra-btn.active,
 .swipe-hint.armed,
 .btn-success {
   background-image: linear-gradient(var(--ok), var(--ok));
@@ -1285,11 +1278,11 @@ body {
 }
 
 .undo-toast {
-  background-image: linear-gradient(rgba(46, 43, 53, 0.95), rgba(46, 43, 53, 0.95));
+  background-image: linear-gradient(rgba(35, 35, 41, 0.95), rgba(35, 35, 41, 0.95));
 }
 
 .app-header {
-  background-image: linear-gradient(rgba(14, 13, 16, 0.85), rgba(14, 13, 16, 0.85));
+  background-image: linear-gradient(rgba(10, 10, 12, 0.85), rgba(10, 10, 12, 0.85));
 }
 
 /* ---------- Reduced motion ---------- */

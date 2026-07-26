@@ -206,24 +206,24 @@ textarea {
 
 .btn-dot {
   position: absolute;
-  top: 1px;
-  right: 1px;
-  width: 12px;
-  height: 12px;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #ff2d2d;
-  background-image: linear-gradient(#ff2d2d, #ff2d2d);
-  box-shadow: 0 0 6px 1px rgba(255, 45, 45, 0.9), 0 0 14px 3px rgba(255, 45, 45, 0.45);
-  animation: dot-pulse 2s ease-in-out infinite;
+  background: #ff5f57;
+  background-image: linear-gradient(#ff5f57, #ff5f57);
+  box-shadow: 0 0 4px 1px rgba(255, 95, 87, 0.55);
+  animation: dot-pulse 2.6s ease-in-out infinite;
 }
 
 @keyframes dot-pulse {
   0%,
   100% {
-    box-shadow: 0 0 6px 1px rgba(255, 45, 45, 0.9), 0 0 14px 3px rgba(255, 45, 45, 0.45);
+    box-shadow: 0 0 4px 1px rgba(255, 95, 87, 0.55);
   }
   50% {
-    box-shadow: 0 0 8px 2px rgba(255, 45, 45, 1), 0 0 20px 6px rgba(255, 45, 45, 0.6);
+    box-shadow: 0 0 6px 2px rgba(255, 95, 87, 0.75);
   }
 }
 

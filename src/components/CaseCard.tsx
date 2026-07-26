@@ -109,7 +109,7 @@ export function CaseCard({
     <article className={`case-card${item.completed ? ' is-completed' : ''}`}>
       <div className="swipe-layer" aria-hidden="true">
         <span className={`swipe-hint left${swipedRight ? ' visible' : ''}${offset >= SWIPE_TRIGGER ? ' armed' : ''}`}>
-          <Icon name="send" size={20} />
+          <Icon name="landmark" size={20} />
         </span>
         <span className={`swipe-hint right${swipedLeft ? ' visible' : ''}${offset <= -SWIPE_TRIGGER ? ' armed' : ''}`}>
           <Icon name="check" size={20} strokeWidth={2.4} />
@@ -153,7 +153,7 @@ export function CaseCard({
             VIN: {item.vin || '—'} <span className="dot">•</span> {item.regNumber || '—'}
           </div>
           <div className="case-meta">
-            {item.manager} <span className="dot">•</span> {item.date.slice(5)}
+            {item.manager} <span className="dot">•</span> {item.date}
           </div>
           {item.fleet && <div className="case-fleet">Fleet ({item.vehicleCount})</div>}
         </div>
@@ -172,28 +172,15 @@ export function CaseCard({
 
         <button
           type="button"
-          className={`icon-btn action-btn plane-btn${item.regitraDone ? ' active' : ''}`}
-          aria-label={item.regitraDone ? 'Dokumentai atiduoti Regitrai' : 'Dokumentai neatiduoti Regitrai'}
+          className={`icon-btn action-btn regitra-btn${item.regitraDone ? ' active' : ''}`}
+          aria-label={item.regitraDone ? 'Palikta Regitroje' : 'Nepalikta Regitroje'}
           aria-pressed={item.regitraDone}
           onClick={(e) => {
             e.stopPropagation()
             onToggleRegitra(item.id)
           }}
         >
-          <Icon name="send" size={19} />
-        </button>
-
-        <button
-          type="button"
-          className={`icon-btn action-btn done-btn${item.completed ? ' active' : ''}`}
-          aria-label={item.completed ? 'Byla užbaigta' : 'Užbaigti bylą'}
-          aria-pressed={item.completed}
-          onClick={(e) => {
-            e.stopPropagation()
-            onRequestComplete(item.id)
-          }}
-        >
-          {item.completed && <Icon name="check" size={18} strokeWidth={2.6} />}
+          <Icon name="landmark" size={20} />
         </button>
       </div>
 

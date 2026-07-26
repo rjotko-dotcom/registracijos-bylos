@@ -212,7 +212,7 @@ textarea {
   height: 8px;
   border-radius: 50%;
   background: #ff2d3f;
-  background-image: radial-gradient(circle at 35% 30%, #ffa8a1 0%, #ff2d3f 65%);
+  background-image: linear-gradient(#ff2d3f, #ff2d3f);
   box-shadow: 0 0 5px 1.5px rgba(255, 45, 63, 0.95), 0 0 11px 3px rgba(255, 45, 63, 0.5);
   animation: dot-pulse 2.6s ease-in-out infinite;
 }

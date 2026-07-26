@@ -75,6 +75,7 @@ export default function App() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<RegistrationCase[] | null>(null)
   const [dataMsg, setDataMsg] = useState('')
+  const [notice, setNotice] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrolled = useScrolled()
@@ -93,6 +94,16 @@ export default function App() {
   }, [])
   const undoTimer = useRef<number | undefined>(undefined)
   const dataMsgTimer = useRef<number | undefined>(undefined)
+  const noticeTimer = useRef<number | undefined>(undefined)
+
+  // PWA icon shortcut ("Nauja byla") lands here with ?new=1
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('new') === '1') {
+      setFormOpen(true)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
 
   useEffect(() => {
     saveCases(cases)
@@ -106,6 +117,7 @@ export default function App() {
     () => () => {
       window.clearTimeout(undoTimer.current)
       window.clearTimeout(dataMsgTimer.current)
+      window.clearTimeout(noticeTimer.current)
     },
     [],
   )
@@ -289,6 +301,38 @@ export default function App() {
       ])
     }
     closeForm()
+  }
+
+  const showNotice = (msg: string) => {
+    setNotice(msg)
+    window.clearTimeout(noticeTimer.current)
+    noticeTimer.current = window.setTimeout(() => setNotice(''), 2500)
+  }
+
+  // copy the at-Regitra list grouped by manager — ready to paste into a chat
+  const handleCopyList = async () => {
+    const atRegitra = cases.filter((it) => !it.completed && it.regitraDone)
+    if (atRegitra.length === 0) return
+    const byManager = new Map<string, string[]>()
+    atRegitra.forEach((it) => {
+      const entry = `${it.model} (${it.regNumber || it.vin || '—'})`
+      byManager.set(it.manager, [...(byManager.get(it.manager) ?? []), entry])
+    })
+    const stamp = new Date().toISOString().slice(0, 10)
+    const text =
+      `Regitroje (${stamp}):\n` +
+      [...byManager.entries()].map(([m, list]) => `${m}: ${list.join(', ')}`).join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
+    showNotice('Sąrašas nukopijuotas')
   }
 
   const showDataMsg = (msg: string) => {
@@ -535,17 +579,29 @@ export default function App() {
 
                 <div className="list-caption-row">
                   <p className="list-caption cap-reg">Regitroje · {atRegitra.length}</p>
-                  {atRegitra.length > 1 && (
-                    <button
-                      type="button"
-                      className={`group-toggle${groupByManager ? ' active' : ''}`}
-                      aria-label="Grupuoti pagal vadybininką"
-                      aria-pressed={groupByManager}
-                      onClick={() => setGroupByManager((v) => !v)}
-                    >
-                      <Icon name="users" size={16} />
-                    </button>
-                  )}
+                  <div className="caption-actions">
+                    {atRegitra.length > 0 && (
+                      <button
+                        type="button"
+                        className="group-toggle"
+                        aria-label="Kopijuoti sąrašą"
+                        onClick={handleCopyList}
+                      >
+                        <Icon name="copy" size={15} />
+                      </button>
+                    )}
+                    {atRegitra.length > 1 && (
+                      <button
+                        type="button"
+                        className={`group-toggle${groupByManager ? ' active' : ''}`}
+                        aria-label="Grupuoti pagal vadybininką"
+                        aria-pressed={groupByManager}
+                        onClick={() => setGroupByManager((v) => !v)}
+                      >
+                        <Icon name="users" size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {groupByManager && atRegitra.length > 1 ? (
                   managers.map((m) => (
@@ -606,6 +662,12 @@ export default function App() {
       {formOpen && (
         <div className={`form-overlay${formClosing ? ' closing' : ''}`}>
           <CaseForm initial={editingItem} managers={managers} onCancel={closeForm} onSubmit={handleSubmitForm} />
+        </div>
+      )}
+
+      {notice && !undo && (
+        <div className="undo-toast notice" role="status">
+          <span>{notice}</span>
         </div>
       )}
 

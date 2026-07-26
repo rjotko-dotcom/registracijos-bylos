@@ -277,6 +277,12 @@ textarea {
   padding-bottom: 6px;
 }
 
+.caption-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .group-toggle {
   width: 36px;
   height: 32px;
@@ -1329,6 +1335,13 @@ textarea {
 
 .undo-toast button:active {
   background: var(--accent-dim);
+}
+
+.undo-toast.notice {
+  justify-content: center;
+  padding: 13px 18px;
+  width: auto;
+  min-width: 220px;
 }
 
 @keyframes toast-up {

@@ -239,7 +239,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 10px 12px 12px;
+  padding: 12px 20px 12px 12px;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
@@ -288,10 +288,25 @@ textarea {
   transform: scale(1);
 }
 
+.swipe-hint.waiting {
+  color: var(--text-2);
+  background: var(--surface-2);
+  animation: hold-pulse 0.45s ease-in-out infinite alternate;
+}
+
 .swipe-hint.armed {
   color: var(--ok);
   background: var(--ok-dim);
   transform: scale(1.1);
+}
+
+@keyframes hold-pulse {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: scale(1.08);
+  }
 }
 
 /* ---------- Brand logo ---------- */
@@ -901,7 +916,7 @@ textarea {
 
   .case-row {
     gap: 4px;
-    padding: 11px 8px 11px 10px;
+    padding: 11px 16px 11px 10px;
   }
 
   .brand-logo {

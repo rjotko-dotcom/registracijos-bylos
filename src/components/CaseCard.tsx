@@ -17,6 +17,9 @@ interface CaseCardProps {
 
 const SWIPE_TRIGGER = 88
 const SWIPE_MAX = 132
+// right-swipe (Regitra) must be held past the threshold this long before it
+// arms — protects against accidental flicks toggling the status
+const HOLD_MS = 450
 
 export function CaseCard({
   item,
@@ -36,8 +39,21 @@ export function CaseCard({
   // swipe state — offset drives the row transform, drag suppresses transitions
   const [offset, setOffset] = useState(0)
   const [dragging, setDragging] = useState(false)
-  const swipe = useRef({ startX: 0, startY: 0, active: false, horizontal: false, fired: false })
+  const [holdArmed, setHoldArmed] = useState(false)
+  const swipe = useRef({ startX: 0, startY: 0, active: false, horizontal: false, fired: false, armed: false })
+  const holdTimer = useRef<number | undefined>(undefined)
   const swipeEnabled = !item.completed && !expanded
+
+  const clearHold = () => {
+    window.clearTimeout(holdTimer.current)
+    holdTimer.current = undefined
+    if (swipe.current.armed) {
+      swipe.current.armed = false
+      setHoldArmed(false)
+    }
+  }
+
+  useEffect(() => () => window.clearTimeout(holdTimer.current), [])
 
   useEffect(() => {
     if (!expanded) setNoteDraft(item.notes)
@@ -63,7 +79,7 @@ export function CaseCard({
   const onPointerDown = (e: React.PointerEvent) => {
     if (!swipeEnabled) return
     if ((e.target as HTMLElement).closest('button')) return
-    swipe.current = { startX: e.clientX, startY: e.clientY, active: true, horizontal: false, fired: false }
+    swipe.current = { startX: e.clientX, startY: e.clientY, active: true, horizontal: false, fired: false, armed: false }
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -82,6 +98,22 @@ export function CaseCard({
       ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     }
     setOffset(clamp(dx))
+
+    // arm the Regitra toggle only after the swipe is held past the threshold
+    if (dx >= SWIPE_TRIGGER) {
+      if (!s.armed && holdTimer.current === undefined) {
+        holdTimer.current = window.setTimeout(() => {
+          holdTimer.current = undefined
+          if (swipe.current.active) {
+            swipe.current.armed = true
+            setHoldArmed(true)
+            navigator.vibrate?.(20)
+          }
+        }, HOLD_MS)
+      }
+    } else if (dx < SWIPE_TRIGGER - 12) {
+      clearHold()
+    }
   }
 
   const finishSwipe = (e: React.PointerEvent) => {
@@ -89,7 +121,7 @@ export function CaseCard({
     if (!s.active) return
     if (s.horizontal && !s.fired) {
       const dx = e.clientX - s.startX
-      if (dx >= SWIPE_TRIGGER) {
+      if (dx >= SWIPE_TRIGGER && s.armed) {
         s.fired = true
         onToggleRegitra(item.id)
       } else if (dx <= -SWIPE_TRIGGER) {
@@ -98,6 +130,7 @@ export function CaseCard({
       }
     }
     s.active = false
+    clearHold()
     setDragging(false)
     setOffset(0)
   }
@@ -108,7 +141,11 @@ export function CaseCard({
   return (
     <article className={`case-card${item.completed ? ' is-completed' : ''}`}>
       <div className="swipe-layer" aria-hidden="true">
-        <span className={`swipe-hint left${swipedRight ? ' visible' : ''}${offset >= SWIPE_TRIGGER ? ' armed' : ''}`}>
+        <span
+          className={`swipe-hint left${swipedRight ? ' visible' : ''}${
+            holdArmed ? ' armed' : offset >= SWIPE_TRIGGER ? ' waiting' : ''
+          }`}
+        >
           <Icon name="landmark" size={20} />
         </span>
         <span className={`swipe-hint right${swipedLeft ? ' visible' : ''}${offset <= -SWIPE_TRIGGER ? ' armed' : ''}`}>

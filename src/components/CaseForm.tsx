@@ -8,7 +8,31 @@ interface CaseFormProps {
   onSubmit: (draft: CaseDraft) => void
 }
 
-const KNOWN_BRANDS = ['Nissan', 'Hyundai', 'Citroen', 'Toyota', 'Volkswagen', 'Škoda', 'Renault', 'Peugeot', 'Kia']
+const KNOWN_BRANDS = [
+  'Nissan',
+  'Hyundai',
+  'Citroen',
+  'Toyota',
+  'Volkswagen',
+  'Škoda',
+  'Renault',
+  'Peugeot',
+  'Kia',
+  'Dacia',
+  'Opel',
+  'Ford',
+  'Volvo',
+  'Mazda',
+  'Honda',
+  'Suzuki',
+  'Mitsubishi',
+  'Subaru',
+  'Seat',
+  'Fiat',
+  'BMW',
+  'Audi',
+  'Tesla',
+]
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)

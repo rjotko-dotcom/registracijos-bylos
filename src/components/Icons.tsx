@@ -23,7 +23,7 @@ export function PlusIcon({ size = 24, className }: IconProps) {
 export function PaperPlaneIcon({ size = 22, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <g transform="rotate(-24 12 12)">
+      <g transform="translate(1.3 -3.2) rotate(-24 12 12)">
         <path
           d="M4 19.6 20.5 12 4 4.4v5.7l9.6 1.9L4 13.9v5.7Z"
           stroke="currentColor"

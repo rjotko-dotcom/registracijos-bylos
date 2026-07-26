@@ -211,20 +211,8 @@ textarea {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ff2d3f;
-  background-image: linear-gradient(#ff2d3f, #ff2d3f);
-  box-shadow: 0 0 5px 1.5px rgba(255, 45, 63, 0.95), 0 0 11px 3px rgba(255, 45, 63, 0.5);
-  animation: dot-pulse 2.6s ease-in-out infinite;
-}
-
-@keyframes dot-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 5px 1.5px rgba(255, 45, 63, 0.95), 0 0 11px 3px rgba(255, 45, 63, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 6px 2px rgba(255, 45, 63, 1), 0 0 14px 4px rgba(255, 45, 63, 0.65);
-  }
+  background: #ff453a;
+  background-image: linear-gradient(#ff453a, #ff453a);
 }
 
 .header-btn {

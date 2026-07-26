@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { CaseDraft, RegistrationCase, Salon } from '../types'
-import { BackIcon } from './Icons'
+import { Icon } from './Icon'
 
 interface CaseFormProps {
   initial?: RegistrationCase
@@ -80,7 +80,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
     <div className="screen form-screen">
       <header className="app-header">
         <button type="button" className="icon-btn header-btn" aria-label="Grįžti" onClick={onCancel}>
-          <BackIcon />
+          <Icon name="back" size={23} />
         </button>
         <h1 className="header-title">{initial ? 'Redaguoti bylą' : 'Nauja byla'}</h1>
       </header>
@@ -201,11 +201,11 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
                 aria-label="Mažinti"
                 onClick={() => setVehicleCount(Math.max(1, vehicleCount - 1))}
               >
-                −
+                <Icon name="minus" size={20} />
               </button>
               <span className="stepper-value">{vehicleCount}</span>
               <button type="button" aria-label="Didinti" onClick={() => setVehicleCount(vehicleCount + 1)}>
-                +
+                <Icon name="plus" size={20} />
               </button>
             </div>
           </div>

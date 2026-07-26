@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RegistrationCase } from '../types'
 import { BrandLogo } from './BrandLogo'
-import { CheckIcon, DocIcon, DocWarnIcon, EditIcon, PaperPlaneIcon } from './Icons'
+import { Icon } from './Icon'
 
 interface CaseCardProps {
   item: RegistrationCase
@@ -109,10 +109,10 @@ export function CaseCard({
     <article className={`case-card${item.completed ? ' is-completed' : ''}`}>
       <div className="swipe-layer" aria-hidden="true">
         <span className={`swipe-hint left${swipedRight ? ' visible' : ''}${offset >= SWIPE_TRIGGER ? ' armed' : ''}`}>
-          <PaperPlaneIcon />
+          <Icon name="send" size={20} />
         </span>
         <span className={`swipe-hint right${swipedLeft ? ' visible' : ''}${offset <= -SWIPE_TRIGGER ? ' armed' : ''}`}>
-          <CheckIcon size={22} />
+          <Icon name="check" size={20} strokeWidth={2.4} />
         </span>
       </div>
 
@@ -153,7 +153,7 @@ export function CaseCard({
             VIN: {item.vin || '—'} <span className="dot">•</span> {item.regNumber || '—'}
           </div>
           <div className="case-meta">
-            {item.manager} <span className="dot">•</span> {item.date}
+            {item.manager} <span className="dot">•</span> {item.date.slice(5)}
           </div>
           {item.fleet && <div className="case-fleet">Fleet ({item.vehicleCount})</div>}
         </div>
@@ -167,7 +167,7 @@ export function CaseCard({
             onToggleTechSheet(item.id)
           }}
         >
-          {item.techSheetNeeded ? <DocWarnIcon /> : <DocIcon />}
+          <Icon name={item.techSheetNeeded ? 'fileWarn' : 'fileCheck'} size={21} />
         </button>
 
         <button
@@ -180,7 +180,7 @@ export function CaseCard({
             onToggleRegitra(item.id)
           }}
         >
-          <PaperPlaneIcon />
+          <Icon name="send" size={19} />
         </button>
 
         <button
@@ -193,7 +193,7 @@ export function CaseCard({
             onRequestComplete(item.id)
           }}
         >
-          {item.completed && <CheckIcon />}
+          {item.completed && <Icon name="check" size={18} strokeWidth={2.6} />}
         </button>
       </div>
 
@@ -207,6 +207,10 @@ export function CaseCard({
             <div className="notes-detail">
               <span className="notes-detail-label">Valst. nr.</span>
               <span className="notes-detail-value">{item.regNumber || '—'}</span>
+            </div>
+            <div className="notes-detail">
+              <span className="notes-detail-label">Data</span>
+              <span className="notes-detail-value">{item.date}</span>
             </div>
             {item.fleet && (
               <div className="notes-detail">
@@ -230,12 +234,13 @@ export function CaseCard({
 
           <div className="notes-actions">
             <button type="button" className="btn btn-ghost" onClick={() => onEdit(item.id)}>
-              <EditIcon size={18} />
+              <Icon name="edit" size={17} />
               Redaguoti
             </button>
             {onRestore && (
               <button type="button" className="btn btn-ghost" onClick={() => onRestore(item.id)}>
-                Grąžinti į aktyvias
+                <Icon name="restore" size={17} />
+                Grąžinti
               </button>
             )}
             <button

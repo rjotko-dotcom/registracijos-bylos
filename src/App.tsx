@@ -4,9 +4,17 @@ import { loadCases, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
 import { ConfirmDialog } from './components/ConfirmDialog'
-import { ArchiveIcon, BackIcon, CloseIcon, PlusIcon, SearchIcon } from './components/Icons'
+import { Icon } from './components/Icon'
 
 type View = 'active' | 'archive'
+
+function bylosWord(n: number): string {
+  const last = n % 10
+  const teens = n % 100 >= 11 && n % 100 <= 19
+  if (last === 1 && !teens) return 'byla'
+  if (last >= 2 && last <= 9 && !teens) return 'bylos'
+  return 'bylų'
+}
 
 function matchesQuery(item: RegistrationCase, query: string): boolean {
   const q = query.trim().toLowerCase()
@@ -126,7 +134,7 @@ export default function App() {
       <header className="app-header">
         {searchOpen ? (
           <div className="search-bar">
-            <SearchIcon size={20} className="search-bar-icon" />
+            <Icon name="search" size={19} className="search-bar-icon" />
             <input
               ref={searchInputRef}
               type="search"
@@ -136,7 +144,7 @@ export default function App() {
               autoComplete="off"
             />
             <button type="button" className="icon-btn header-btn" aria-label="Uždaryti paiešką" onClick={closeSearch}>
-              <CloseIcon />
+              <Icon name="close" size={21} />
             </button>
           </div>
         ) : (
@@ -151,7 +159,7 @@ export default function App() {
                   setExpandedId(null)
                 }}
               >
-                <BackIcon />
+                <Icon name="back" size={23} />
               </button>
             ) : null}
             <h1 className="header-title">{view === 'active' ? 'Registracijos bylos' : 'Archyvas'}</h1>
@@ -166,7 +174,7 @@ export default function App() {
                     setExpandedId(null)
                   }}
                 >
-                  <ArchiveIcon />
+                  <Icon name="archive" size={20} />
                 </button>
               )}
               <button
@@ -175,7 +183,7 @@ export default function App() {
                 aria-label="Paieška"
                 onClick={() => setSearchOpen(true)}
               >
-                <SearchIcon />
+                <Icon name="search" size={20} />
               </button>
               {view === 'active' && (
                 <button
@@ -187,7 +195,7 @@ export default function App() {
                     setFormOpen(true)
                   }}
                 >
-                  <PlusIcon />
+                  <Icon name="plus" size={22} strokeWidth={2.2} />
                 </button>
               )}
             </div>
@@ -195,15 +203,26 @@ export default function App() {
         )}
       </header>
 
+      <p className="list-caption">
+        {searchOpen && query.trim()
+          ? `Rasta: ${visible.length} ${bylosWord(visible.length)}`
+          : view === 'active'
+            ? `Aktyvios: ${visible.length} ${bylosWord(visible.length)}`
+            : `Archyve: ${visible.length} ${bylosWord(visible.length)}`}
+      </p>
+
       <main className="case-list">
         {visible.length === 0 && (
-          <p className="empty-state">
-            {searchOpen && query.trim()
-              ? 'Nieko nerasta.'
-              : view === 'active'
-                ? 'Aktyvių bylų nėra.'
-                : 'Archyvas tuščias.'}
-          </p>
+          <div className="empty-state">
+            <Icon name={searchOpen && query.trim() ? 'search' : view === 'active' ? 'inbox' : 'archive'} size={30} strokeWidth={1.6} />
+            <p>
+              {searchOpen && query.trim()
+                ? 'Nieko nerasta.'
+                : view === 'active'
+                  ? 'Aktyvių bylų nėra.'
+                  : 'Archyvas tuščias.'}
+            </p>
+          </div>
         )}
         {visible.map((item) => (
           <CaseCard

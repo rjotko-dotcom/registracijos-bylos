@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CaseDraft, RegistrationCase, Salon } from '../types'
 import { Icon } from './Icon'
+import { useScrolled } from '../useScrolled'
 
 interface CaseFormProps {
   initial?: RegistrationCase
@@ -52,6 +53,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
   const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
+  const scrolled = useScrolled()
 
   const valid = brand.trim() && model.trim() && manager.trim() && date
 
@@ -78,7 +80,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
 
   return (
     <div className="screen form-screen">
-      <header className="app-header">
+      <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
         <button type="button" className="icon-btn header-btn" aria-label="Grįžti" onClick={onCancel}>
           <Icon name="back" size={23} />
         </button>

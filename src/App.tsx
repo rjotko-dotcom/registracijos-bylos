@@ -5,6 +5,7 @@ import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Icon } from './components/Icon'
+import { useScrolled } from './useScrolled'
 
 type View = 'active' | 'archive'
 
@@ -43,6 +44,7 @@ export default function App() {
   const [dataMsg, setDataMsg] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const scrolled = useScrolled()
   const undoTimer = useRef<number | undefined>(undefined)
   const dataMsgTimer = useRef<number | undefined>(undefined)
 
@@ -240,7 +242,7 @@ export default function App() {
 
   return (
     <div className="screen">
-      <header className="app-header">
+      <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
         {searchOpen ? (
           <div className="search-bar">
             <Icon name="search" size={19} className="search-bar-icon" />

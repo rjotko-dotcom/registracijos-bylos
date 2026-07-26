@@ -8,7 +8,12 @@ export function loadCases(): RegistrationCase[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed
+      if (Array.isArray(parsed)) {
+        // migrate entries stored before the techSheetOk → techSheetNeeded rename
+        return parsed.map((it) =>
+          'techSheetOk' in it ? { ...it, techSheetNeeded: !it.techSheetOk, techSheetOk: undefined } : it,
+        )
+      }
     }
   } catch {
     // corrupted storage — fall through to seed data

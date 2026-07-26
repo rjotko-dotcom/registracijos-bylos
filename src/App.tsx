@@ -54,7 +54,7 @@ export default function App() {
 
   const handleToggleExpand = (id: string) => setExpandedId((cur) => (cur === id ? null : id))
   const handleToggleTechSheet = (id: string) =>
-    setCases((prev) => prev.map((it) => (it.id === id ? { ...it, techSheetOk: !it.techSheetOk } : it)))
+    setCases((prev) => prev.map((it) => (it.id === id ? { ...it, techSheetNeeded: !it.techSheetNeeded } : it)))
   const handleToggleRegitra = (id: string) =>
     setCases((prev) => prev.map((it) => (it.id === id ? { ...it, regitraDone: !it.regitraDone } : it)))
 

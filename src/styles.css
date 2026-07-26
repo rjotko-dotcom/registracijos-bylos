@@ -184,6 +184,7 @@ textarea {
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
   overflow: hidden;
+  position: relative;
 }
 
 .case-row {
@@ -193,7 +194,56 @@ textarea {
   padding: 14px 10px 14px 12px;
   cursor: pointer;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+  position: relative;
+  background: var(--card-bg);
+  transition: transform 0.22s ease;
+}
+
+.case-row.dragging {
+  transition: none;
+}
+
+/* ---------- Swipe hints ---------- */
+
+.swipe-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  pointer-events: none;
+}
+
+.swipe-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--text-faint);
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.swipe-hint.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.swipe-hint.armed {
+  color: var(--green);
+  background: var(--green-dim);
+  transform: scale(1.1);
 }
 
 .brand-logo {
@@ -690,6 +740,15 @@ textarea {
 .switch.on .knob {
   transform: translateX(20px);
   background: var(--green);
+}
+
+.switch.warn.on {
+  background: var(--red-dim);
+  border-color: rgba(255, 82, 72, 0.45);
+}
+
+.switch.warn.on .knob {
+  background: var(--red);
 }
 
 .stepper {

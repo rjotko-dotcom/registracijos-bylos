@@ -23,13 +23,15 @@ export function PlusIcon({ size = 24, className }: IconProps) {
 export function PaperPlaneIcon({ size = 22, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M21.5 3.5 2.8 10.2c-.8.3-.8 1.4 0 1.7l6.6 2.4 2.4 6.6c.3.8 1.4.8 1.7 0L20.2 2.2"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="m9.5 14.3 12-10.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <g transform="rotate(-24 12 12)">
+        <path
+          d="M4 19.6 20.5 12 4 4.4v5.7l9.6 1.9L4 13.9v5.7Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
     </svg>
   )
 }

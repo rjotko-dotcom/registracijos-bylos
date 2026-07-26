@@ -11,7 +11,7 @@ export interface RegistrationCase {
   salon: Salon
   fleet: boolean
   vehicleCount: number
-  techSheetOk: boolean
+  techSheetNeeded: boolean
   regitraDone: boolean
   completed: boolean
   notes: string

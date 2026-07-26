@@ -24,7 +24,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
   const [salon, setSalon] = useState<Salon>(initial?.salon ?? 'L1')
   const [fleet, setFleet] = useState(initial?.fleet ?? false)
   const [vehicleCount, setVehicleCount] = useState(initial?.vehicleCount ?? 1)
-  const [techSheetOk, setTechSheetOk] = useState(initial?.techSheetOk ?? true)
+  const [techSheetNeeded, setTechSheetNeeded] = useState(initial?.techSheetNeeded ?? false)
   const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
@@ -45,7 +45,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
       salon,
       fleet,
       vehicleCount: fleet ? Math.max(1, vehicleCount) : 1,
-      techSheetOk,
+      techSheetNeeded,
       regitraDone,
       notes: notes.trim(),
       completed: initial?.completed ?? false,
@@ -94,12 +94,14 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="f-vin">VIN</label>
+          <label htmlFor="f-vin">VIN (paskutiniai 4 skaitmenys)</label>
           <input
             id="f-vin"
             value={vin}
             onChange={(e) => setVin(e.target.value)}
-            placeholder="SJNFAAJ12U2404567"
+            placeholder="4EG7"
+            inputMode="text"
+            maxLength={17}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
@@ -186,13 +188,13 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
         )}
 
         <div className="toggle-row">
-          <span className="field-label">Techninis lapas tvarkingas</span>
+          <span className="field-label">Reikia techninio lapo</span>
           <button
             type="button"
             role="switch"
-            aria-checked={techSheetOk}
-            className={`switch${techSheetOk ? ' on' : ''}`}
-            onClick={() => setTechSheetOk(!techSheetOk)}
+            aria-checked={techSheetNeeded}
+            className={`switch warn${techSheetNeeded ? ' on' : ''}`}
+            onClick={() => setTechSheetNeeded(!techSheetNeeded)}
           >
             <span className="knob" />
           </button>

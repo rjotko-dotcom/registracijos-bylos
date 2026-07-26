@@ -17,6 +17,7 @@ interface CaseCardProps {
 
 const SWIPE_TRIGGER = 88
 const SWIPE_MAX = 132
+const DAY = 86_400_000
 // right-swipe (Regitra) must be held past the threshold this long before it
 // arms — protects against accidental flicks toggling the status
 const HOLD_MS = 450
@@ -34,7 +35,32 @@ export function CaseCard({
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
   const [saved, setSaved] = useState(false)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
   const savedTimer = useRef<number | undefined>(undefined)
+  const copyTimer = useRef<number | undefined>(undefined)
+
+  // days the documents have been sitting at Regitra — flag stale cases
+  const regitraDays =
+    item.regitraDone && !item.completed && item.regitraAt
+      ? Math.floor((Date.now() - item.regitraAt) / DAY)
+      : 0
+
+  const copyValue = async (field: string, value: string) => {
+    if (!value) return
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = value
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
+    setCopiedField(field)
+    window.clearTimeout(copyTimer.current)
+    copyTimer.current = window.setTimeout(() => setCopiedField(null), 1400)
+  }
 
   // swipe state — offset drives the row transform, drag suppresses transitions
   const [offset, setOffset] = useState(0)
@@ -59,7 +85,13 @@ export function CaseCard({
     if (!expanded) setNoteDraft(item.notes)
   }, [expanded, item.notes])
 
-  useEffect(() => () => window.clearTimeout(savedTimer.current), [])
+  useEffect(
+    () => () => {
+      window.clearTimeout(savedTimer.current)
+      window.clearTimeout(copyTimer.current)
+    },
+    [],
+  )
 
   const handleSaveNotes = () => {
     onSaveNotes(item.id, noteDraft.trim())
@@ -193,6 +225,12 @@ export function CaseCard({
             {item.manager} <span className="dot">•</span> {item.date}
           </div>
           {item.fleet && <div className="case-fleet">Fleet ({item.vehicleCount})</div>}
+          {regitraDays >= 2 && (
+            <div className={`case-age${regitraDays >= 5 ? ' late' : ''}`}>
+              <Icon name="clock" size={12} strokeWidth={2.2} />
+              Regitroje {regitraDays} d.
+            </div>
+          )}
         </div>
 
         <button
@@ -226,11 +264,27 @@ export function CaseCard({
           <div className="notes-details">
             <div className="notes-detail">
               <span className="notes-detail-label">VIN</span>
-              <span className="notes-detail-value">{item.vin || '—'}</span>
+              <button
+                type="button"
+                className="notes-detail-value copyable"
+                onClick={() => copyValue('vin', item.vin)}
+                aria-label="Kopijuoti VIN"
+              >
+                {copiedField === 'vin' ? 'Nukopijuota ✓' : item.vin || '—'}
+                {item.vin && copiedField !== 'vin' && <Icon name="copy" size={13} />}
+              </button>
             </div>
             <div className="notes-detail">
               <span className="notes-detail-label">Valst. nr.</span>
-              <span className="notes-detail-value">{item.regNumber || '—'}</span>
+              <button
+                type="button"
+                className="notes-detail-value copyable"
+                onClick={() => copyValue('reg', item.regNumber)}
+                aria-label="Kopijuoti valstybinį numerį"
+              >
+                {copiedField === 'reg' ? 'Nukopijuota ✓' : item.regNumber || '—'}
+                {item.regNumber && copiedField !== 'reg' && <Icon name="copy" size={13} />}
+              </button>
             </div>
             <div className="notes-detail">
               <span className="notes-detail-label">Data</span>

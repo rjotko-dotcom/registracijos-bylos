@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CaseDraft, RegistrationCase } from './types'
-import { loadCases, saveCases } from './storage'
+import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
 import { ConfirmDialog } from './components/ConfirmDialog'
@@ -37,11 +37,30 @@ export default function App() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [groupByManager, setGroupByManager] = useState(() => localStorage.getItem('rb:groupBy') === '1')
+  const [undoId, setUndoId] = useState<string | null>(null)
+  const [pendingImport, setPendingImport] = useState<RegistrationCase[] | null>(null)
+  const [dataMsg, setDataMsg] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const undoTimer = useRef<number | undefined>(undefined)
+  const dataMsgTimer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     saveCases(cases)
   }, [cases])
+
+  useEffect(() => {
+    localStorage.setItem('rb:groupBy', groupByManager ? '1' : '0')
+  }, [groupByManager])
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(undoTimer.current)
+      window.clearTimeout(dataMsgTimer.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus()
@@ -64,7 +83,13 @@ export default function App() {
   const handleToggleTechSheet = (id: string) =>
     setCases((prev) => prev.map((it) => (it.id === id ? { ...it, techSheetNeeded: !it.techSheetNeeded } : it)))
   const handleToggleRegitra = (id: string) =>
-    setCases((prev) => prev.map((it) => (it.id === id ? { ...it, regitraDone: !it.regitraDone } : it)))
+    setCases((prev) =>
+      prev.map((it) =>
+        it.id === id
+          ? { ...it, regitraDone: !it.regitraDone, regitraAt: it.regitraDone ? null : Date.now() }
+          : it,
+      ),
+    )
 
   const handleRequestComplete = (id: string) => {
     const item = cases.find((it) => it.id === id)
@@ -80,8 +105,17 @@ export default function App() {
     if (confirmId) {
       update(confirmId, { completed: true, completedAt: Date.now() })
       setExpandedId(null)
+      setUndoId(confirmId)
+      window.clearTimeout(undoTimer.current)
+      undoTimer.current = window.setTimeout(() => setUndoId(null), 6000)
     }
     setConfirmId(null)
+  }
+
+  const handleUndoComplete = () => {
+    if (undoId) update(undoId, { completed: false, completedAt: null })
+    window.clearTimeout(undoTimer.current)
+    setUndoId(null)
   }
 
   const handleRestore = (id: string) => {
@@ -95,17 +129,76 @@ export default function App() {
   }
 
   const handleSubmitForm = (draft: CaseDraft) => {
+    const now = Date.now()
     if (editingId) {
-      update(editingId, draft)
+      const prev = cases.find((it) => it.id === editingId)
+      const regitraAt = draft.regitraDone ? (prev?.regitraDone ? (prev.regitraAt ?? now) : now) : null
+      update(editingId, { ...draft, regitraAt })
     } else {
-      const now = Date.now()
       setCases((prev) => [
-        { ...draft, id: `c${now.toString(36)}`, createdAt: now, completedAt: null },
+        {
+          ...draft,
+          id: `c${now.toString(36)}`,
+          createdAt: now,
+          completedAt: null,
+          regitraAt: draft.regitraDone ? now : null,
+        },
         ...prev,
       ])
     }
     setFormOpen(false)
     setEditingId(null)
+  }
+
+  const showDataMsg = (msg: string) => {
+    setDataMsg(msg)
+    window.clearTimeout(dataMsgTimer.current)
+    dataMsgTimer.current = window.setTimeout(() => setDataMsg(''), 4000)
+  }
+
+  const handleExport = async () => {
+    const json = JSON.stringify(cases, null, 2)
+    const stamp = new Date().toISOString().slice(0, 10)
+    let copied = false
+    try {
+      await navigator.clipboard.writeText(json)
+      copied = true
+    } catch {
+      // clipboard unavailable — the download below still works
+    }
+    try {
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `registracijos-bylos-${stamp}.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 4000)
+      showDataMsg(copied ? 'Failas atsisiųstas ir nukopijuota į iškarpinę.' : 'Failas atsisiųstas.')
+    } catch {
+      showDataMsg(copied ? 'Nukopijuota į iškarpinę.' : 'Nepavyko eksportuoti.')
+    }
+  }
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result))
+        if (!Array.isArray(parsed) || !parsed.every((it) => it && typeof it === 'object' && 'id' in it)) {
+          throw new Error('bad shape')
+        }
+        setPendingImport(parsed.map(migrate))
+      } catch {
+        showDataMsg('Netinkamas failas — importuoti nepavyko.')
+      }
+    }
+    reader.readAsText(file)
   }
 
   const closeSearch = () => {
@@ -203,28 +296,9 @@ export default function App() {
         )}
       </header>
 
-      <p className="list-caption">
-        {searchOpen && query.trim()
-          ? `Rasta: ${visible.length} ${bylosWord(visible.length)}`
-          : view === 'active'
-            ? `Aktyvios: ${visible.length} ${bylosWord(visible.length)}`
-            : `Archyve: ${visible.length} ${bylosWord(visible.length)}`}
-      </p>
-
-      <main className="case-list">
-        {visible.length === 0 && (
-          <div className="empty-state">
-            <Icon name={searchOpen && query.trim() ? 'search' : view === 'active' ? 'inbox' : 'archive'} size={30} strokeWidth={1.6} />
-            <p>
-              {searchOpen && query.trim()
-                ? 'Nieko nerasta.'
-                : view === 'active'
-                  ? 'Aktyvių bylų nėra.'
-                  : 'Archyvas tuščias.'}
-            </p>
-          </div>
-        )}
-        {visible.map((item) => (
+      {(() => {
+        const searching = searchOpen && query.trim() !== ''
+        const renderCard = (item: RegistrationCase) => (
           <CaseCard
             key={item.id}
             item={item}
@@ -237,8 +311,103 @@ export default function App() {
             onEdit={handleEdit}
             onRestore={view === 'archive' ? handleRestore : undefined}
           />
-        ))}
-      </main>
+        )
+
+        if (searching || view === 'archive') {
+          return (
+            <>
+              <p className="list-caption">
+                {searching
+                  ? `Rasta: ${visible.length} ${bylosWord(visible.length)}`
+                  : `Archyve: ${visible.length} ${bylosWord(visible.length)}`}
+              </p>
+              <main className="case-list">
+                {visible.length === 0 && (
+                  <div className="empty-state">
+                    <Icon name={searching ? 'search' : 'archive'} size={30} strokeWidth={1.6} />
+                    <p>{searching ? 'Nieko nerasta.' : 'Archyvas tuščias.'}</p>
+                  </div>
+                )}
+                {visible.map(renderCard)}
+              </main>
+              {view === 'archive' && !searching && (
+                <section className="data-tools">
+                  <p className="list-caption">Duomenų kopija</p>
+                  <div className="data-tools-row">
+                    <button type="button" className="btn btn-ghost" onClick={handleExport}>
+                      <Icon name="download" size={17} />
+                      Eksportuoti
+                    </button>
+                    <button type="button" className="btn btn-ghost" onClick={() => fileInputRef.current?.click()}>
+                      <Icon name="upload" size={17} />
+                      Importuoti
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json,.json"
+                      hidden
+                      onChange={handleImportFile}
+                    />
+                  </div>
+                  {dataMsg && <p className="data-msg">{dataMsg}</p>}
+                </section>
+              )}
+            </>
+          )
+        }
+
+        const toTake = visible.filter((it) => !it.regitraDone)
+        const atRegitra = visible.filter((it) => it.regitraDone)
+        const managers = [...new Set(atRegitra.map((it) => it.manager))].sort((a, b) =>
+          a.localeCompare(b, 'lt'),
+        )
+
+        return (
+          <>
+            {visible.length === 0 ? (
+              <main className="case-list">
+                <div className="empty-state">
+                  <Icon name="inbox" size={30} strokeWidth={1.6} />
+                  <p>Aktyvių bylų nėra.</p>
+                </div>
+              </main>
+            ) : (
+              <>
+                <p className="list-caption">Vežti į Regitrą · {toTake.length}</p>
+                <main className="case-list">{toTake.map(renderCard)}</main>
+
+                <div className="list-caption-row">
+                  <p className="list-caption">Regitroje · {atRegitra.length}</p>
+                  {atRegitra.length > 1 && (
+                    <button
+                      type="button"
+                      className={`group-toggle${groupByManager ? ' active' : ''}`}
+                      aria-label="Grupuoti pagal vadybininką"
+                      aria-pressed={groupByManager}
+                      onClick={() => setGroupByManager((v) => !v)}
+                    >
+                      <Icon name="users" size={16} />
+                    </button>
+                  )}
+                </div>
+                {groupByManager && atRegitra.length > 1 ? (
+                  managers.map((m) => (
+                    <div key={m} className="manager-group">
+                      <p className="manager-caption">{m}</p>
+                      <div className="case-list">
+                        {atRegitra.filter((it) => it.manager === m).map(renderCard)}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <main className="case-list">{atRegitra.map(renderCard)}</main>
+                )}
+              </>
+            )}
+          </>
+        )
+      })()}
 
       {confirmItem && (
         <ConfirmDialog
@@ -248,6 +417,29 @@ export default function App() {
           onConfirm={handleConfirmComplete}
           onCancel={() => setConfirmId(null)}
         />
+      )}
+
+      {pendingImport && (
+        <ConfirmDialog
+          title="Importuoti duomenis?"
+          message={`Visos dabartinės bylos (${cases.length}) bus pakeistos importuotomis (${pendingImport.length}).`}
+          confirmLabel="Importuoti"
+          onConfirm={() => {
+            setCases(pendingImport)
+            setPendingImport(null)
+            showDataMsg('Duomenys importuoti.')
+          }}
+          onCancel={() => setPendingImport(null)}
+        />
+      )}
+
+      {undoId && (
+        <div className="undo-toast" role="status">
+          <span>Byla perkelta į archyvą</span>
+          <button type="button" onClick={handleUndoComplete}>
+            Atšaukti
+          </button>
+        </div>
       )}
     </div>
   )

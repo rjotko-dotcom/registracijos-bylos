@@ -13,10 +13,11 @@ export interface RegistrationCase {
   vehicleCount: number
   techSheetNeeded: boolean
   regitraDone: boolean
+  regitraAt: number | null // when the documents were left at Regitra
   completed: boolean
   notes: string
   createdAt: number
   completedAt: number | null
 }
 
-export type CaseDraft = Omit<RegistrationCase, 'id' | 'createdAt' | 'completedAt'>
+export type CaseDraft = Omit<RegistrationCase, 'id' | 'createdAt' | 'completedAt' | 'regitraAt'>

@@ -1668,6 +1668,42 @@ body {
   background-image: linear-gradient(rgba(10, 10, 12, 0.85), rgba(10, 10, 12, 0.85));
 }
 
+/* Some forced-dark implementations (Samsung Internet) remap gradient
+   fills as well; opaque inset box-shadows are never touched, so the
+   bright accent fills get repainted once more on top of everything. */
+.header-btn.accent {
+  box-shadow: inset 0 0 0 99px #339cff;
+}
+
+.btn-dot {
+  box-shadow: inset 0 0 0 99px #ff453a;
+}
+
+.group-toggle.active,
+.btn-primary,
+.chip.active,
+.todo-add-btn {
+  box-shadow: inset 0 0 0 99px var(--accent);
+}
+
+.swipe-hint.armed,
+.btn-success,
+.todo-item.done .todo-check {
+  box-shadow: inset 0 0 0 99px var(--ok);
+}
+
+.btn-danger {
+  box-shadow: inset 0 0 0 99px var(--bad);
+}
+
+.switch.on .knob {
+  box-shadow: inset 0 0 0 99px var(--ok);
+}
+
+.switch.warn.on .knob {
+  box-shadow: inset 0 0 0 99px var(--bad);
+}
+
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {

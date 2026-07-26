@@ -211,19 +211,19 @@ textarea {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ff5f57;
-  background-image: linear-gradient(#ff5f57, #ff5f57);
-  box-shadow: 0 0 4px 1px rgba(255, 95, 87, 0.55);
+  background: #ff2d3f;
+  background-image: radial-gradient(circle at 35% 30%, #ffa8a1 0%, #ff2d3f 65%);
+  box-shadow: 0 0 5px 1.5px rgba(255, 45, 63, 0.95), 0 0 11px 3px rgba(255, 45, 63, 0.5);
   animation: dot-pulse 2.6s ease-in-out infinite;
 }
 
 @keyframes dot-pulse {
   0%,
   100% {
-    box-shadow: 0 0 4px 1px rgba(255, 95, 87, 0.55);
+    box-shadow: 0 0 5px 1.5px rgba(255, 45, 63, 0.95), 0 0 11px 3px rgba(255, 45, 63, 0.5);
   }
   50% {
-    box-shadow: 0 0 6px 2px rgba(255, 95, 87, 0.75);
+    box-shadow: 0 0 6px 2px rgba(255, 45, 63, 1), 0 0 14px 4px rgba(255, 45, 63, 0.65);
   }
 }
 

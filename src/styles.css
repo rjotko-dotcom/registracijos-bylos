@@ -235,7 +235,10 @@ textarea {
 }
 
 .header-btn.accent {
-  background: var(--accent);
+  width: 37px;
+  height: 37px;
+  background: #339cff;
+  background-image: linear-gradient(#339cff, #339cff);
   color: var(--on-accent);
 }
 
@@ -1633,7 +1636,6 @@ body {
   background-image: linear-gradient(var(--surface-2), var(--surface-2));
 }
 
-.header-btn.accent,
 .group-toggle.active,
 .btn-primary {
   background-image: linear-gradient(var(--accent), var(--accent));

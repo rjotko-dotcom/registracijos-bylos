@@ -665,7 +665,7 @@ export default function App() {
                     setFormOpen(true)
                   }}
                 >
-                  <Icon name="plus" size={22} strokeWidth={2.2} />
+                  <Icon name="plus" size={20} strokeWidth={2.2} />
                 </button>
               )}
             </div>

@@ -1,0 +1,240 @@
+import { useState } from 'react'
+import type { CaseDraft, RegistrationCase, Salon } from '../types'
+import { BackIcon } from './Icons'
+
+interface CaseFormProps {
+  initial?: RegistrationCase
+  onCancel: () => void
+  onSubmit: (draft: CaseDraft) => void
+}
+
+const KNOWN_BRANDS = ['Nissan', 'Hyundai', 'Citroen', 'Toyota', 'Volkswagen', 'Škoda', 'Renault', 'Peugeot', 'Kia']
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
+  const [brand, setBrand] = useState(initial?.brand ?? '')
+  const [model, setModel] = useState(initial?.model ?? '')
+  const [vin, setVin] = useState(initial?.vin ?? '')
+  const [regNumber, setRegNumber] = useState(initial?.regNumber ?? '')
+  const [manager, setManager] = useState(initial?.manager ?? '')
+  const [date, setDate] = useState(initial?.date ?? todayISO())
+  const [salon, setSalon] = useState<Salon>(initial?.salon ?? 'L1')
+  const [fleet, setFleet] = useState(initial?.fleet ?? false)
+  const [vehicleCount, setVehicleCount] = useState(initial?.vehicleCount ?? 1)
+  const [techSheetOk, setTechSheetOk] = useState(initial?.techSheetOk ?? true)
+  const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
+  const [notes, setNotes] = useState(initial?.notes ?? '')
+  const [triedSubmit, setTriedSubmit] = useState(false)
+
+  const valid = brand.trim() && model.trim() && manager.trim() && date
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setTriedSubmit(true)
+    if (!valid) return
+    onSubmit({
+      brand: brand.trim(),
+      model: model.trim(),
+      vin: vin.trim().toUpperCase(),
+      regNumber: regNumber.trim().toUpperCase(),
+      manager: manager.trim(),
+      date,
+      salon,
+      fleet,
+      vehicleCount: fleet ? Math.max(1, vehicleCount) : 1,
+      techSheetOk,
+      regitraDone,
+      notes: notes.trim(),
+      completed: initial?.completed ?? false,
+    })
+  }
+
+  return (
+    <div className="screen form-screen">
+      <header className="app-header">
+        <button type="button" className="icon-btn header-btn" aria-label="Grįžti" onClick={onCancel}>
+          <BackIcon />
+        </button>
+        <h1 className="header-title">{initial ? 'Redaguoti bylą' : 'Nauja byla'}</h1>
+      </header>
+
+      <form className="case-form" onSubmit={handleSubmit} noValidate>
+        <div className="form-grid-2">
+          <div className="field">
+            <label htmlFor="f-brand">Markė</label>
+            <input
+              id="f-brand"
+              list="brand-list"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="Nissan"
+              autoComplete="off"
+              className={triedSubmit && !brand.trim() ? 'invalid' : ''}
+            />
+            <datalist id="brand-list">
+              {KNOWN_BRANDS.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
+          </div>
+          <div className="field">
+            <label htmlFor="f-model">Modelis</label>
+            <input
+              id="f-model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder="Qashqai"
+              autoComplete="off"
+              className={triedSubmit && !model.trim() ? 'invalid' : ''}
+            />
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="f-vin">VIN</label>
+          <input
+            id="f-vin"
+            value={vin}
+            onChange={(e) => setVin(e.target.value)}
+            placeholder="SJNFAAJ12U2404567"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+          />
+        </div>
+
+        <div className="form-grid-2">
+          <div className="field">
+            <label htmlFor="f-reg">Valst. numeris</label>
+            <input
+              id="f-reg"
+              value={regNumber}
+              onChange={(e) => setRegNumber(e.target.value)}
+              placeholder="ABC123"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="f-date">Data</label>
+            <input id="f-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="f-manager">Vadybininkas</label>
+          <input
+            id="f-manager"
+            value={manager}
+            onChange={(e) => setManager(e.target.value)}
+            placeholder="Mantas J."
+            autoComplete="off"
+            className={triedSubmit && !manager.trim() ? 'invalid' : ''}
+          />
+        </div>
+
+        <div className="field">
+          <span className="field-label">Salonas</span>
+          <div className="segmented">
+            {(['L1', 'L3'] as Salon[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={salon === s ? 'active' : ''}
+                onClick={() => setSalon(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="toggle-row">
+          <span className="field-label">Fleet užsakymas</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={fleet}
+            className={`switch${fleet ? ' on' : ''}`}
+            onClick={() => setFleet(!fleet)}
+          >
+            <span className="knob" />
+          </button>
+        </div>
+
+        {fleet && (
+          <div className="field">
+            <span className="field-label">Automobilių skaičius</span>
+            <div className="stepper">
+              <button
+                type="button"
+                aria-label="Mažinti"
+                onClick={() => setVehicleCount(Math.max(1, vehicleCount - 1))}
+              >
+                −
+              </button>
+              <span className="stepper-value">{vehicleCount}</span>
+              <button type="button" aria-label="Didinti" onClick={() => setVehicleCount(vehicleCount + 1)}>
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="toggle-row">
+          <span className="field-label">Techninis lapas tvarkingas</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={techSheetOk}
+            className={`switch${techSheetOk ? ' on' : ''}`}
+            onClick={() => setTechSheetOk(!techSheetOk)}
+          >
+            <span className="knob" />
+          </button>
+        </div>
+
+        <div className="toggle-row">
+          <span className="field-label">Atiduota Regitrai</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={regitraDone}
+            className={`switch${regitraDone ? ' on' : ''}`}
+            onClick={() => setRegitraDone(!regitraDone)}
+          >
+            <span className="knob" />
+          </button>
+        </div>
+
+        <div className="field">
+          <label htmlFor="f-notes">Pastabos</label>
+          <textarea
+            id="f-notes"
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Papildoma informacija…"
+          />
+        </div>
+
+        {triedSubmit && !valid && (
+          <p className="form-error">Užpildykite markę, modelį, vadybininką ir datą.</p>
+        )}
+
+        <div className="form-actions">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+            Atšaukti
+          </button>
+          <button type="submit" className="btn btn-primary">
+            {initial ? 'Išsaugoti' : 'Pridėti bylą'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}

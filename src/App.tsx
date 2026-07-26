@@ -4,10 +4,11 @@ import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
 import { ConfirmDialog } from './components/ConfirmDialog'
+import { NotesScreen, type TodoItem } from './components/NotesScreen'
 import { Icon } from './components/Icon'
 import { useScrolled } from './useScrolled'
 
-type View = 'active' | 'archive'
+type View = 'active' | 'archive' | 'notes'
 
 // FLIP: when cards jump between sections (or reorder), animate them from
 // their previous position to the new one instead of teleporting
@@ -76,6 +77,16 @@ export default function App() {
   const [pendingImport, setPendingImport] = useState<RegistrationCase[] | null>(null)
   const [dataMsg, setDataMsg] = useState('')
   const [notice, setNotice] = useState('')
+  const [todos, setTodos] = useState<TodoItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('rb:todos')
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  })
+  const [memo, setMemo] = useState(() => localStorage.getItem('rb:memo') ?? '')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrolled = useScrolled()
@@ -112,6 +123,22 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('rb:groupBy', groupByManager ? '1' : '0')
   }, [groupByManager])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rb:todos', JSON.stringify(todos))
+    } catch {
+      // storage unavailable
+    }
+  }, [todos])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rb:memo', memo)
+    } catch {
+      // storage unavailable
+    }
+  }, [memo])
 
   useEffect(
     () => () => {
@@ -156,7 +183,7 @@ export default function App() {
 
   const todayLabel = useMemo(() => {
     const d = new Date()
-    const weekday = d.toLocaleDateString('lt-LT', { weekday: 'long' })
+    const weekday = d.toLocaleDateString('lt-LT', { weekday: 'short' })
     const monthDay = d.toLocaleDateString('lt-LT', { month: 'long', day: 'numeric' })
     return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${monthDay}`
   }, [today])
@@ -343,7 +370,7 @@ export default function App() {
   }
 
   const handleExport = async () => {
-    const json = JSON.stringify(cases, null, 2)
+    const json = JSON.stringify({ version: 2, cases, todos, memo }, null, 2)
     const stamp = new Date().toISOString().slice(0, 10)
     let copied = false
     try {
@@ -376,10 +403,15 @@ export default function App() {
     reader.onload = () => {
       try {
         const parsed = JSON.parse(String(reader.result))
-        if (!Array.isArray(parsed) || !parsed.every((it) => it && typeof it === 'object' && 'id' in it)) {
+        const list = Array.isArray(parsed) ? parsed : parsed?.cases
+        if (!Array.isArray(list) || !list.every((it) => it && typeof it === 'object' && 'id' in it)) {
           throw new Error('bad shape')
         }
-        setPendingImport(parsed.map(migrate))
+        if (!Array.isArray(parsed)) {
+          if (Array.isArray(parsed.todos)) setTodos(parsed.todos)
+          if (typeof parsed.memo === 'string') setMemo(parsed.memo)
+        }
+        setPendingImport(list.map(migrate))
       } catch {
         showDataMsg('Netinkamas failas — importuoti nepavyko.')
       }
@@ -394,6 +426,25 @@ export default function App() {
 
   const editingItem = editingId ? cases.find((it) => it.id === editingId) : undefined
   const confirmItem = confirmId ? cases.find((it) => it.id === confirmId) : undefined
+
+  if (view === 'notes') {
+    return (
+      <NotesScreen
+        todos={todos}
+        memo={memo}
+        onAddTodo={(text) =>
+          setTodos((prev) => [...prev, { id: `t${Date.now().toString(36)}`, text, done: false }])
+        }
+        onToggleTodo={(id) =>
+          setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+        }
+        onDeleteTodo={(id) => setTodos((prev) => prev.filter((t) => t.id !== id))}
+        onClearDone={() => setTodos((prev) => prev.filter((t) => !t.done))}
+        onMemoChange={setMemo}
+        onBack={() => setView('active')}
+      />
+    )
+  }
 
   return (
     <div className="screen">
@@ -446,6 +497,20 @@ export default function App() {
               <h1 className="header-title">Archyvas</h1>
             )}
             <div className="header-actions">
+              {view === 'active' && (
+                <button
+                  type="button"
+                  className="icon-btn header-btn has-badge"
+                  aria-label="Užrašai"
+                  onClick={() => {
+                    setView('notes')
+                    setExpandedId(null)
+                  }}
+                >
+                  <Icon name="notebook" size={19} />
+                  {todos.some((t) => !t.done) && <span className="btn-dot" aria-hidden="true" />}
+                </button>
+              )}
               {view === 'active' && (
                 <button
                   type="button"

@@ -201,12 +201,25 @@ textarea {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.btn-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--warn);
+  background-image: linear-gradient(var(--warn), var(--warn));
+  border: 2px solid var(--bg);
 }
 
 .header-btn {
-  width: 44px;
-  height: 44px;
+  position: relative;
+  width: 41px;
+  height: 41px;
   border-radius: 50%;
   background: var(--surface-2);
   border: none;
@@ -1273,6 +1286,156 @@ textarea {
   color: var(--on-accent);
 }
 
+/* ---------- Notes screen ---------- */
+
+.todo-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.todo-add input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  background: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  padding: 0 14px;
+  font-size: 15.5px;
+  outline: none;
+}
+
+.todo-add input:focus {
+  border-color: var(--accent);
+}
+
+.todo-add input::placeholder {
+  color: var(--text-3);
+}
+
+.todo-add-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-ctl);
+  background: var(--accent);
+  background-image: linear-gradient(var(--accent), var(--accent));
+  color: var(--on-accent);
+  flex-shrink: 0;
+}
+
+.todo-add-btn:disabled {
+  opacity: 0.35;
+}
+
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todo-empty {
+  color: var(--text-3);
+  font-size: 14px;
+  padding: 8px 4px 4px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 52px;
+  padding: 6px 6px 6px 12px;
+  background: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--surface));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-ctl);
+  animation: card-in 0.25s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+.todo-check {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 2px solid var(--line-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-ok);
+  flex-shrink: 0;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.todo-item.done .todo-check {
+  background: var(--ok);
+  background-image: linear-gradient(var(--ok), var(--ok));
+  border-color: var(--ok);
+}
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.35;
+  word-break: break-word;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.todo-item.done .todo-text {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.todo-del {
+  width: 40px;
+  height: 40px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.todo-clear {
+  margin-top: 12px;
+  align-self: flex-start;
+  height: 40px;
+  font-size: 14px;
+}
+
+.memo-caption {
+  margin-top: 26px;
+}
+
+.memo-input {
+  width: 100%;
+  background: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 170px;
+  outline: none;
+}
+
+.memo-input:focus {
+  border-color: var(--accent);
+}
+
+.memo-input::placeholder {
+  color: var(--text-3);
+}
+
+.memo-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 8px 4px 0;
+}
+
 /* ---------- Form sheet overlay ---------- */
 
 .form-overlay {
@@ -1389,8 +1552,8 @@ textarea {
   }
 
   .header-btn {
-    width: 41px;
-    height: 41px;
+    width: 39px;
+    height: 39px;
   }
 
   .header-actions {

@@ -277,8 +277,9 @@ export default function App() {
               <div className="header-summary">
                 <span className="header-date">{todayLabel}</span>
                 <span className="header-counts">
-                  Vežti <strong>{toTakeCount}</strong> <span className="dot">·</span> Regitroje{' '}
-                  <strong>{atRegitraCount}</strong>
+                  Vežti <strong className="c-take">{toTakeCount}</strong>{' '}
+                  <span className="dot">·</span> Regitroje{' '}
+                  <strong className="c-reg">{atRegitraCount}</strong>
                 </span>
               </div>
             ) : (
@@ -402,11 +403,11 @@ export default function App() {
               </main>
             ) : (
               <>
-                <p className="list-caption">Vežti į Regitrą · {toTake.length}</p>
+                <p className="list-caption cap-take">Vežti į Regitrą · {toTake.length}</p>
                 <main className="case-list">{toTake.map(renderCard)}</main>
 
                 <div className="list-caption-row">
-                  <p className="list-caption">Regitroje · {atRegitra.length}</p>
+                  <p className="list-caption cap-reg">Regitroje · {atRegitra.length}</p>
                   {atRegitra.length > 1 && (
                     <button
                       type="button"

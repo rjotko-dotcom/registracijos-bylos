@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CaseDraft, RegistrationCase, Salon } from '../types'
+import type { CaseDraft, RegistrationCase, Salon, TechSheet } from '../types'
 import { Icon } from './Icon'
 import { useScrolled } from '../useScrolled'
 
@@ -56,7 +56,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
   const [salon, setSalon] = useState<Salon>(initial?.salon ?? 'L1')
   const [fleet, setFleet] = useState(initial?.fleet ?? false)
   const [vehicleCount, setVehicleCount] = useState(initial?.vehicleCount ?? 1)
-  const [techSheetNeeded, setTechSheetNeeded] = useState(initial?.techSheetNeeded ?? false)
+  const [techSheet, setTechSheet] = useState<TechSheet>(initial?.techSheet ?? 'none')
   const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
@@ -82,7 +82,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
       salon,
       fleet,
       vehicleCount: fleet ? Math.max(1, vehicleCount) : 1,
-      techSheetNeeded,
+      techSheet,
       regitraDone,
       notes: notes.trim(),
       completed: initial?.completed ?? false,
@@ -235,17 +235,26 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
           </div>
         )}
 
-        <div className="toggle-row">
-          <span className="field-label">Reikia techninio lapo</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={techSheetNeeded}
-            className={`switch warn${techSheetNeeded ? ' on' : ''}`}
-            onClick={() => setTechSheetNeeded(!techSheetNeeded)}
-          >
-            <span className="knob" />
-          </button>
+        <div className="field">
+          <span className="field-label">Techninis lapas</span>
+          <div className="segmented" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {(
+              [
+                ['none', 'Nereikia'],
+                ['needed', 'Reikia'],
+                ['have', 'Paimtas'],
+              ] as [TechSheet, string][]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={techSheet === value ? `active${value === 'needed' ? ' warn' : value === 'have' ? ' ok' : ''}` : ''}
+                onClick={() => setTechSheet(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="toggle-row">

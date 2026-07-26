@@ -172,6 +172,7 @@ export function CaseCard({
 
   return (
     <article className={`case-card${item.completed ? ' is-completed' : ''}`}>
+      <div className="row-zone">
       <div className="swipe-layer" aria-hidden="true">
         <span
           className={`swipe-hint left${swipedRight ? ' visible' : ''}${
@@ -235,14 +236,26 @@ export function CaseCard({
 
         <button
           type="button"
-          className={`icon-btn doc-btn ${item.techSheetNeeded ? 'warn' : 'ok'}`}
-          aria-label={item.techSheetNeeded ? 'Reikia techninio lapo' : 'Techninio lapo nereikia'}
+          className={`icon-btn doc-btn ${
+            item.techSheet === 'needed' ? 'warn' : item.techSheet === 'have' ? 'ok' : 'off'
+          }`}
+          disabled={item.techSheet === 'none'}
+          aria-label={
+            item.techSheet === 'needed'
+              ? 'Reikia techninio lapo — paliesk, kai paimsi'
+              : item.techSheet === 'have'
+                ? 'Techninis lapas paimtas'
+                : 'Techninio lapo nereikia'
+          }
           onClick={(e) => {
             e.stopPropagation()
             onToggleTechSheet(item.id)
           }}
         >
-          <Icon name={item.techSheetNeeded ? 'fileWarn' : 'fileOff'} size={21} />
+          <Icon
+            name={item.techSheet === 'needed' ? 'fileWarn' : item.techSheet === 'have' ? 'fileCheck' : 'fileOff'}
+            size={21}
+          />
         </button>
 
         <span
@@ -252,6 +265,8 @@ export function CaseCard({
         >
           <Icon name="landmark" size={21} />
         </span>
+      </div>
+
       </div>
 
       {item.notes && !expanded && (

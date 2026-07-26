@@ -5,11 +5,19 @@ const STORAGE_KEY = 'registracijos-bylos:v1'
 
 // upgrades entries written by older app versions to the current shape
 export function migrate(it: Record<string, unknown>): RegistrationCase {
-  const out = { ...it } as unknown as RegistrationCase & { techSheetOk?: boolean }
+  const out = { ...it } as unknown as RegistrationCase & {
+    techSheetOk?: boolean
+    techSheetNeeded?: boolean
+  }
   if ('techSheetOk' in out) {
     out.techSheetNeeded = !out.techSheetOk
     delete out.techSheetOk
   }
+  if ('techSheetNeeded' in out) {
+    out.techSheet = out.techSheetNeeded ? 'needed' : 'none'
+    delete out.techSheetNeeded
+  }
+  if (!out.techSheet) out.techSheet = 'none'
   if (out.regitraAt === undefined) {
     out.regitraAt = out.regitraDone ? Date.now() : null
   }

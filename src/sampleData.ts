@@ -29,7 +29,7 @@ function c(
     salon,
     fleet: false,
     vehicleCount: 1,
-    techSheetNeeded: false,
+    techSheet: 'none',
     regitraDone: false,
     regitraAt: null,
     completed: false,
@@ -44,7 +44,7 @@ export const sampleCases: RegistrationCase[] = [
   c('s1', 'Nissan', 'Qashqai', '4EG7', 'MRH468', 'Mantas J.', 0, 'L1'),
   c('s2', 'Hyundai', 'Tucson', '1391', 'DDV589', 'Dovydas P.', 0, 'L1'),
   c('s3', 'Nissan', 'Juke', '7789', 'KGG777', 'Justinas R.', 0, 'L1', {
-    techSheetNeeded: true,
+    techSheet: 'needed',
     notes: 'Trūksta techninio lapo iš serviso.',
   }),
   c('s4', 'Citroen', 'Berlingo x3, Jumpy x2', '6671', 'FLT001', 'Greta P.', 1, 'L3', {
@@ -52,9 +52,11 @@ export const sampleCases: RegistrationCase[] = [
     vehicleCount: 5,
     notes: 'Fleet užsakymas — dokumentai bendri.',
   }),
-  c('s5', 'Nissan', 'X-Trail', '7788', 'KGG778', 'Paulius V.', 1, 'L3'),
+  c('s5', 'Nissan', 'X-Trail', '7788', 'KGG778', 'Paulius V.', 1, 'L3', {
+    techSheet: 'have',
+  }),
   c('s6', 'Hyundai', 'i30', '6655', 'JJJ333', 'Eglė K.', 1, 'L1', {
-    techSheetNeeded: true,
+    techSheet: 'needed',
   }),
   c('s7', 'Hyundai', 'Kona', '9988', 'KNA868', 'Simona L.', 2, 'L3', {
     regitraDone: true,
@@ -75,7 +77,7 @@ export const sampleCases: RegistrationCase[] = [
     completedAt: NOW - 3 * DAY,
   }),
   c('s11', 'Hyundai', 'i20', '8877', 'DDD555', 'Dovydas P.', 6, 'L1', {
-    techSheetNeeded: true,
+    techSheet: 'needed',
     regitraDone: true,
     regitraAt: NOW - 5 * DAY,
     completed: true,

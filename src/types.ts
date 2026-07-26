@@ -1,4 +1,5 @@
 export type Salon = 'L1' | 'L3'
+export type TechSheet = 'none' | 'needed' | 'have'
 
 export interface RegistrationCase {
   id: string
@@ -11,7 +12,7 @@ export interface RegistrationCase {
   salon: Salon
   fleet: boolean
   vehicleCount: number
-  techSheetNeeded: boolean
+  techSheet: TechSheet
   regitraDone: boolean
   regitraAt: number | null // when the documents were left at Regitra
   completed: boolean

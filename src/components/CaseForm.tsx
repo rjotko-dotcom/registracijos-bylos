@@ -9,38 +9,45 @@ interface CaseFormProps {
   onSubmit: (draft: CaseDraft) => void
 }
 
-const KNOWN_BRANDS = [
-  'Nissan',
-  'Hyundai',
-  'Citroen',
-  'Toyota',
-  'Volkswagen',
-  'Škoda',
-  'Renault',
-  'Peugeot',
-  'Kia',
-  'Dacia',
-  'Opel',
-  'Ford',
-  'Volvo',
-  'Mazda',
-  'Honda',
-  'Suzuki',
-  'Mitsubishi',
-  'Subaru',
-  'Seat',
-  'Fiat',
-  'BMW',
-  'Audi',
-  'Tesla',
-]
+const BRANDS = ['Nissan', 'Hyundai', 'Citroen']
+
+const BRAND_MODELS: Record<string, string[]> = {
+  Nissan: ['Micra', 'Juke', 'Qashqai', 'X-Trail', 'Ariya', 'Leaf', 'Townstar', 'Primastar', 'Interstar'],
+  Hyundai: [
+    'i10',
+    'i20',
+    'i30',
+    'Bayon',
+    'Inster',
+    'Kona',
+    'Tucson',
+    'Santa Fe',
+    'Ioniq 5',
+    'Ioniq 6',
+    'Ioniq 9',
+    'Staria',
+  ],
+  Citroen: [
+    'C3',
+    'C3 Aircross',
+    'C4',
+    'C4 X',
+    'C5 Aircross',
+    'C5 X',
+    'Berlingo',
+    'SpaceTourer',
+    'Jumpy',
+    'Jumper',
+    'Ami',
+  ],
+}
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
 export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
-  const [brand, setBrand] = useState(initial?.brand ?? '')
+  const [brand, setBrand] = useState(initial?.brand ?? 'Nissan')
   const [model, setModel] = useState(initial?.model ?? '')
   const [vin, setVin] = useState(initial?.vin ?? '')
   const [regNumber, setRegNumber] = useState(initial?.regNumber ?? '')
@@ -54,6 +61,10 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
   const scrolled = useScrolled()
+
+  // an older case may carry a brand outside the fixed trio — keep it selectable
+  const brandOptions =
+    initial?.brand && !BRANDS.includes(initial.brand) ? [...BRANDS, initial.brand] : BRANDS
 
   const valid = brand.trim() && model.trim() && manager.trim() && date
 
@@ -88,35 +99,46 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
       </header>
 
       <form className="case-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-grid-2">
-          <div className="field">
-            <label htmlFor="f-brand">Markė</label>
-            <input
-              id="f-brand"
-              list="brand-list"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              placeholder="Nissan"
-              autoComplete="off"
-              className={triedSubmit && !brand.trim() ? 'invalid' : ''}
-            />
-            <datalist id="brand-list">
-              {KNOWN_BRANDS.map((b) => (
-                <option key={b} value={b} />
+        <div className="field">
+          <span className="field-label">Markė</span>
+          <div
+            className="segmented"
+            style={{ gridTemplateColumns: `repeat(${brandOptions.length}, 1fr)` }}
+          >
+            {brandOptions.map((b) => (
+              <button key={b} type="button" className={brand === b ? 'active' : ''} onClick={() => setBrand(b)}>
+                {b}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="f-model">Modelis</label>
+          <input
+            id="f-model"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder={BRAND_MODELS[brand]?.[2] ?? 'Modelis'}
+            autoComplete="off"
+            className={triedSubmit && !model.trim() ? 'invalid' : ''}
+          />
+          {(BRAND_MODELS[brand] ?? []).length > 0 && (
+            <div className="chip-row" role="listbox" aria-label={`${brand} modeliai`}>
+              {BRAND_MODELS[brand].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="option"
+                  aria-selected={model === m}
+                  className={`chip${model === m ? ' active' : ''}`}
+                  onClick={() => setModel(m)}
+                >
+                  {m}
+                </button>
               ))}
-            </datalist>
-          </div>
-          <div className="field">
-            <label htmlFor="f-model">Modelis</label>
-            <input
-              id="f-model"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="Qashqai"
-              autoComplete="off"
-              className={triedSubmit && !model.trim() ? 'invalid' : ''}
-            />
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="field">

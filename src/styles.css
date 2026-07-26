@@ -1095,6 +1095,48 @@ textarea {
   height: 52px;
 }
 
+/* ---------- Model chips ---------- */
+
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 6px;
+  margin-top: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.chip:active {
+  transform: scale(0.95);
+}
+
+.chip.active {
+  background: var(--accent);
+  background-image: linear-gradient(var(--accent), var(--accent));
+  color: var(--on-accent);
+}
+
 /* ---------- Undo toast ---------- */
 
 .undo-toast {

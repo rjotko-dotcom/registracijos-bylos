@@ -466,6 +466,72 @@ export default function App() {
     setQuery('')
   }
 
+  // Phone back button: every open sub-screen/dialog owns one history entry,
+  // so "back" peels layers off instead of exiting the app. Entries are
+  // retired with history.go(-1) when a layer is closed from within the UI.
+  const layerDepth =
+    (formOpen && !formClosing ? 1 : 0) +
+    (confirmId ? 1 : 0) +
+    (deleteId ? 1 : 0) +
+    (pendingImport ? 1 : 0) +
+    (searchOpen ? 1 : 0) +
+    (view !== 'active' ? 1 : 0)
+  const layerDepthRef = useRef(0)
+  const popSelf = useRef(0) // popstates caused by our own history.go()
+  const popUser = useRef(0) // layer closes already paid for by a real back press
+
+  const closeTopLayer = () => {
+    if (formOpen && !formClosing) {
+      closeForm()
+    } else if (deleteId) {
+      setDeleteId(null)
+    } else if (confirmId) {
+      setConfirmId(null)
+    } else if (pendingImport) {
+      setPendingImport(null)
+    } else if (searchOpen) {
+      closeSearch()
+    } else if (view !== 'active') {
+      setView('active')
+      setExpandedId(null)
+    }
+  }
+  const closeTopRef = useRef(closeTopLayer)
+  closeTopRef.current = closeTopLayer
+
+  useEffect(() => {
+    const prev = layerDepthRef.current
+    layerDepthRef.current = layerDepth
+    if (layerDepth > prev) {
+      for (let i = prev; i < layerDepth; i++) window.history.pushState({ rbLayer: true }, '')
+    } else if (layerDepth < prev) {
+      let retire = prev - layerDepth
+      while (retire > 0 && popUser.current > 0) {
+        popUser.current--
+        retire--
+      }
+      if (retire > 0) {
+        popSelf.current += retire
+        window.history.go(-retire)
+      }
+    }
+  }, [layerDepth])
+
+  useEffect(() => {
+    const onPop = () => {
+      if (popSelf.current > 0) {
+        popSelf.current--
+        return
+      }
+      if (layerDepthRef.current > 0) {
+        popUser.current++
+        closeTopRef.current()
+      }
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
   const editingItem = editingId ? cases.find((it) => it.id === editingId) : undefined
   const confirmItem = confirmId ? cases.find((it) => it.id === confirmId) : undefined
 

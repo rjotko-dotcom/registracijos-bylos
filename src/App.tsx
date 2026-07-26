@@ -164,9 +164,10 @@ export default function App() {
   const visible = useMemo(() => {
     const inView = cases.filter((it) => (view === 'active' ? !it.completed : it.completed))
     const filtered = searchOpen ? inView.filter((it) => matchesQuery(it, query)) : inView
+    // active view: oldest first — the case that arrived first gets driven first
     return [...filtered].sort((a, b) =>
       view === 'active'
-        ? b.date.localeCompare(a.date) || b.createdAt - a.createdAt
+        ? a.date.localeCompare(b.date) || a.createdAt - b.createdAt
         : (b.completedAt ?? 0) - (a.completedAt ?? 0),
     )
   }, [cases, view, searchOpen, query])

@@ -74,7 +74,13 @@ export function CaseCard({
   const [holdArmed, setHoldArmed] = useState(false)
   const swipe = useRef({ startX: 0, startY: 0, active: false, horizontal: false, fired: false, armed: false })
   const holdTimer = useRef<number | undefined>(undefined)
+  const longPress = useRef({ timer: undefined as number | undefined, fired: false, x: 0, y: 0 })
   const swipeEnabled = !item.completed && !expanded
+
+  const clearLongPress = () => {
+    window.clearTimeout(longPress.current.timer)
+    longPress.current.timer = undefined
+  }
 
   const clearHold = () => {
     window.clearTimeout(holdTimer.current)
@@ -85,7 +91,13 @@ export function CaseCard({
     }
   }
 
-  useEffect(() => () => window.clearTimeout(holdTimer.current), [])
+  useEffect(
+    () => () => {
+      window.clearTimeout(holdTimer.current)
+      window.clearTimeout(longPress.current.timer)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!expanded) setNoteDraft(item.notes)
@@ -115,12 +127,27 @@ export function CaseCard({
   }
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (!swipeEnabled) return
     if ((e.target as HTMLElement).closest('button')) return
+    // long-press anywhere on the card opens the edit form
+    longPress.current = {
+      timer: window.setTimeout(() => {
+        longPress.current.fired = true
+        navigator.vibrate?.(15)
+        onEdit(item.id)
+      }, 550),
+      fired: false,
+      x: e.clientX,
+      y: e.clientY,
+    }
+    if (!swipeEnabled) return
     swipe.current = { startX: e.clientX, startY: e.clientY, active: true, horizontal: false, fired: false, armed: false }
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
+    const lp = longPress.current
+    if (lp.timer !== undefined && Math.abs(e.clientX - lp.x) + Math.abs(e.clientY - lp.y) > 10) {
+      clearLongPress()
+    }
     const s = swipe.current
     if (!s.active || s.fired) return
     const dx = e.clientX - s.startX
@@ -155,6 +182,7 @@ export function CaseCard({
   }
 
   const finishSwipe = (e: React.PointerEvent) => {
+    clearLongPress()
     const s = swipe.current
     if (!s.active) return
     if (s.horizontal && !s.fired) {
@@ -201,7 +229,11 @@ export function CaseCard({
         tabIndex={0}
         aria-expanded={expanded}
         onClick={() => {
-          // a click always follows pointerup — swallow it if this gesture was a swipe
+          // a click always follows pointerup — swallow it after a swipe or long-press
+          if (longPress.current.fired) {
+            longPress.current.fired = false
+            return
+          }
           if (swipe.current.horizontal || swipe.current.fired) {
             swipe.current.horizontal = false
             swipe.current.fired = false

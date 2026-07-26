@@ -171,7 +171,7 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
           <input
             id="f-vin"
             value={vin}
-            onChange={(e) => setVin(e.target.value)}
+            onChange={(e) => setVin(e.target.value.toUpperCase())}
             placeholder="4EG7"
             inputMode="text"
             maxLength={17}
@@ -187,7 +187,7 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
             <input
               id="f-reg"
               value={regNumber}
-              onChange={(e) => setRegNumber(e.target.value)}
+              onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
               placeholder="ABC123"
               autoComplete="off"
               autoCapitalize="characters"

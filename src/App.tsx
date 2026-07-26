@@ -4,7 +4,7 @@ import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
 import { ConfirmDialog } from './components/ConfirmDialog'
-import { NotesScreen, type TodoItem } from './components/NotesScreen'
+import { NotesScreen, type RoutineItem, type TodoItem } from './components/NotesScreen'
 import { Icon } from './components/Icon'
 import { useScrolled } from './useScrolled'
 
@@ -87,6 +87,26 @@ export default function App() {
     }
   })
   const [memo, setMemo] = useState(() => localStorage.getItem('rb:memo') ?? '')
+  const [routines, setRoutines] = useState<RoutineItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('rb:routines')
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  })
+  // which routine items are checked off, valid for one calendar day only
+  const [routineState, setRoutineState] = useState<{ date: string; done: string[] }>(() => {
+    try {
+      const raw = localStorage.getItem('rb:routineDone')
+      const parsed = raw ? JSON.parse(raw) : null
+      if (parsed && typeof parsed.date === 'string' && Array.isArray(parsed.done)) return parsed
+    } catch {
+      // fall through
+    }
+    return { date: new Date().toDateString(), done: [] }
+  })
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrolled = useScrolled()
@@ -139,6 +159,27 @@ export default function App() {
       // storage unavailable
     }
   }, [memo])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rb:routines', JSON.stringify(routines))
+    } catch {
+      // storage unavailable
+    }
+  }, [routines])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rb:routineDone', JSON.stringify(routineState))
+    } catch {
+      // storage unavailable
+    }
+  }, [routineState])
+
+  // new day → routine checkmarks reset themselves
+  useEffect(() => {
+    if (routineState.date !== today) setRoutineState({ date: today, done: [] })
+  }, [today, routineState.date])
 
   useEffect(
     () => () => {
@@ -370,7 +411,7 @@ export default function App() {
   }
 
   const handleExport = async () => {
-    const json = JSON.stringify({ version: 2, cases, todos, memo }, null, 2)
+    const json = JSON.stringify({ version: 3, cases, todos, routines, memo }, null, 2)
     const stamp = new Date().toISOString().slice(0, 10)
     let copied = false
     try {
@@ -409,6 +450,7 @@ export default function App() {
         }
         if (!Array.isArray(parsed)) {
           if (Array.isArray(parsed.todos)) setTodos(parsed.todos)
+          if (Array.isArray(parsed.routines)) setRoutines(parsed.routines)
           if (typeof parsed.memo === 'string') setMemo(parsed.memo)
         }
         setPendingImport(list.map(migrate))
@@ -431,6 +473,8 @@ export default function App() {
     return (
       <NotesScreen
         todos={todos}
+        routines={routines}
+        routineDoneIds={routineState.done}
         memo={memo}
         onAddTodo={(text) =>
           setTodos((prev) => [...prev, { id: `t${Date.now().toString(36)}`, text, done: false }])
@@ -440,6 +484,16 @@ export default function App() {
         }
         onDeleteTodo={(id) => setTodos((prev) => prev.filter((t) => t.id !== id))}
         onClearDone={() => setTodos((prev) => prev.filter((t) => !t.done))}
+        onAddRoutine={(text) =>
+          setRoutines((prev) => [...prev, { id: `r${Date.now().toString(36)}`, text }])
+        }
+        onToggleRoutine={(id) =>
+          setRoutineState((prev) => ({
+            ...prev,
+            done: prev.done.includes(id) ? prev.done.filter((d) => d !== id) : [...prev.done, id],
+          }))
+        }
+        onDeleteRoutine={(id) => setRoutines((prev) => prev.filter((r) => r.id !== id))}
         onMemoChange={setMemo}
         onBack={() => setView('active')}
       />
@@ -508,7 +562,10 @@ export default function App() {
                   }}
                 >
                   <Icon name="notebook" size={19} />
-                  {todos.some((t) => !t.done) && <span className="btn-dot" aria-hidden="true" />}
+                  {(todos.some((t) => !t.done) ||
+                    routines.some((r) => !routineState.done.includes(r.id))) && (
+                    <span className="btn-dot" aria-hidden="true" />
+                  )}
                 </button>
               )}
               {view === 'active' && (

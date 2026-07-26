@@ -70,7 +70,8 @@ export default function App() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [groupByManager, setGroupByManager] = useState(() => localStorage.getItem('rb:groupBy') === '1')
-  const [undoId, setUndoId] = useState<string | null>(null)
+  const [undo, setUndo] = useState<{ label: string; action: () => void } | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<RegistrationCase[] | null>(null)
   const [dataMsg, setDataMsg] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -171,22 +172,38 @@ export default function App() {
     }
   }
 
+  const showUndo = (label: string, action: () => void) => {
+    setUndo({ label, action })
+    window.clearTimeout(undoTimer.current)
+    undoTimer.current = window.setTimeout(() => setUndo(null), 6000)
+  }
+
   const handleConfirmComplete = () => {
     if (confirmId) {
-      update(confirmId, { completed: true, completedAt: Date.now() })
+      const id = confirmId
+      update(id, { completed: true, completedAt: Date.now() })
       navigator.vibrate?.(30)
       setExpandedId(null)
-      setUndoId(confirmId)
-      window.clearTimeout(undoTimer.current)
-      undoTimer.current = window.setTimeout(() => setUndoId(null), 6000)
+      showUndo('Byla perkelta į archyvą', () => update(id, { completed: false, completedAt: null }))
     }
     setConfirmId(null)
   }
 
-  const handleUndoComplete = () => {
-    if (undoId) update(undoId, { completed: false, completedAt: null })
+  const handleConfirmDelete = () => {
+    if (deleteId) {
+      const removed = cases.find((it) => it.id === deleteId)
+      setCases((prev) => prev.filter((it) => it.id !== deleteId))
+      setExpandedId(null)
+      navigator.vibrate?.(30)
+      if (removed) showUndo('Byla ištrinta', () => setCases((prev) => [removed, ...prev]))
+    }
+    setDeleteId(null)
+  }
+
+  const handleUndo = () => {
+    undo?.action()
     window.clearTimeout(undoTimer.current)
-    setUndoId(null)
+    setUndo(null)
   }
 
   const handleRestore = (id: string) => {
@@ -392,6 +409,7 @@ export default function App() {
             onSaveNotes={(id, notes) => update(id, { notes })}
             onEdit={handleEdit}
             onRestore={view === 'archive' ? handleRestore : undefined}
+            onRequestDelete={(id) => setDeleteId(id)}
           />
         )
 
@@ -501,6 +519,20 @@ export default function App() {
         />
       )}
 
+      {deleteId && (
+        <ConfirmDialog
+          title="Ištrinti bylą?"
+          message={(() => {
+            const it = cases.find((c) => c.id === deleteId)
+            return `„${it?.model ?? ''}" (${it?.regNumber || it?.vin || 'be numerio'}) bus pašalinta visam laikui.`
+          })()}
+          confirmLabel="Ištrinti"
+          danger
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
+
       {pendingImport && (
         <ConfirmDialog
           title="Importuoti duomenis?"
@@ -515,10 +547,10 @@ export default function App() {
         />
       )}
 
-      {undoId && (
+      {undo && (
         <div className="undo-toast" role="status">
-          <span>Byla perkelta į archyvą</span>
-          <button type="button" onClick={handleUndoComplete}>
+          <span>{undo.label}</span>
+          <button type="button" onClick={handleUndo}>
             Atšaukti
           </button>
         </div>

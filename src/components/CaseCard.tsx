@@ -13,6 +13,7 @@ interface CaseCardProps {
   onSaveNotes: (id: string, notes: string) => void
   onEdit: (id: string) => void
   onRestore?: (id: string) => void
+  onRequestDelete: (id: string) => void
 }
 
 const SWIPE_TRIGGER = 88
@@ -32,6 +33,7 @@ export function CaseCard({
   onSaveNotes,
   onEdit,
   onRestore,
+  onRequestDelete,
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
   const [saved, setSaved] = useState(false)
@@ -331,6 +333,14 @@ export function CaseCard({
             <button type="button" className="btn btn-ghost" onClick={() => onEdit(item.id)}>
               <Icon name="edit" size={17} />
               Redaguoti
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost danger"
+              aria-label="Ištrinti bylą"
+              onClick={() => onRequestDelete(item.id)}
+            >
+              <Icon name="trash" size={17} />
             </button>
             {onRestore && (
               <button type="button" className="btn btn-ghost" onClick={() => onRestore(item.id)}>

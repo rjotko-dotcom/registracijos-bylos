@@ -875,6 +875,21 @@ textarea {
   background: var(--line);
 }
 
+.btn-ghost.danger {
+  color: var(--bad);
+  padding: 0 14px;
+}
+
+.btn-danger {
+  background: var(--bad);
+  background-image: linear-gradient(var(--bad), var(--bad));
+  color: #fff;
+}
+
+.btn-danger:active {
+  opacity: 0.85;
+}
+
 /* ---------- Completed card (archive) ---------- */
 
 .case-card.is-completed .case-model {

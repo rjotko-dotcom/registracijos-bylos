@@ -2,11 +2,12 @@ interface ConfirmDialogProps {
   title: string
   message: string
   confirmLabel: string
+  danger?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
 
-export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({ title, message, confirmLabel, danger, onConfirm, onCancel }: ConfirmDialogProps) {
   return (
     <div className="dialog-backdrop" onClick={onCancel}>
       <div
@@ -22,7 +23,7 @@ export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCance
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
             Atšaukti
           </button>
-          <button type="button" className="btn btn-success" onClick={onConfirm}>
+          <button type="button" className={`btn ${danger ? 'btn-danger' : 'btn-success'}`} onClick={onConfirm}>
             {confirmLabel}
           </button>
         </div>

@@ -29,12 +29,17 @@ export function loadCases(): RegistrationCase[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed.map(migrate)
+      if (Array.isArray(parsed)) {
+        const migrated = parsed.map(migrate)
+        // production: one-time cleanup of the demo cases seeded by early versions
+        return import.meta.env.DEV ? migrated : migrated.filter((it) => !/^s\d{1,2}$/.test(it.id))
+      }
     }
   } catch {
     // corrupted storage — fall through to seed data
   }
-  return sampleCases
+  // demo data only during development — real installs start empty
+  return import.meta.env.DEV ? sampleCases : []
 }
 
 export function saveCases(cases: RegistrationCase[]): void {

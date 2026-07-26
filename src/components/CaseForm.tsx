@@ -5,6 +5,7 @@ import { useScrolled } from '../useScrolled'
 
 interface CaseFormProps {
   initial?: RegistrationCase
+  managers?: string[]
   onCancel: () => void
   onSubmit: (draft: CaseDraft) => void
 }
@@ -46,7 +47,7 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
+export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFormProps) {
   const [brand, setBrand] = useState(initial?.brand ?? 'Nissan')
   const [model, setModel] = useState(initial?.model ?? '')
   const [vin, setVin] = useState(initial?.vin ?? '')
@@ -209,6 +210,22 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
             autoComplete="off"
             className={triedSubmit && !manager.trim() ? 'invalid' : ''}
           />
+          {managers.length > 0 && (
+            <div className="chip-row" role="listbox" aria-label="Vadybininkai">
+              {managers.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="option"
+                  aria-selected={manager === m}
+                  className={`chip${manager === m ? ' active' : ''}`}
+                  onClick={() => setManager(m)}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="field">

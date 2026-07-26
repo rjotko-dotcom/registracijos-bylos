@@ -17,7 +17,7 @@ interface CaseCardProps {
 }
 
 const SWIPE_TRIGGER = 88
-const SWIPE_MAX = 132
+const SWIPE_MAX = 144
 const DAY = 86_400_000
 // right-swipe (Regitra) must be held past the threshold this long before it
 // arms — protects against accidental flicks toggling the status
@@ -106,7 +106,7 @@ export function CaseCard({
     const capped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, dx))
     // rubber-band resistance past the trigger distance
     return Math.abs(capped) > SWIPE_TRIGGER
-      ? Math.sign(capped) * (SWIPE_TRIGGER + (Math.abs(capped) - SWIPE_TRIGGER) * 0.4)
+      ? Math.sign(capped) * (SWIPE_TRIGGER + (Math.abs(capped) - SWIPE_TRIGGER) * 0.5)
       : capped
   }
 
@@ -169,8 +169,8 @@ export function CaseCard({
     setOffset(0)
   }
 
-  const swipedRight = offset > 12
-  const swipedLeft = offset < -12
+  const swipedRight = offset > 4
+  const swipedLeft = offset < -4
 
   return (
     <article className={`case-card${item.completed ? ' is-completed' : ''}`} data-flip-id={item.id}>
@@ -236,6 +236,12 @@ export function CaseCard({
             {item.manager} <span className="dot">•</span> {item.date}
           </div>
           {item.fleet && <div className="case-fleet">Fleet ({item.vehicleCount})</div>}
+          {item.completed && item.completedAt && (
+            <div className="case-done">
+              <Icon name="check" size={12} strokeWidth={2.6} />
+              Užbaigta {new Date(item.completedAt).toISOString().slice(5, 10)}
+            </div>
+          )}
           {regitraDays >= 2 && (
             <div className={`case-age${regitraDays >= 5 ? ' late' : ''}`}>
               <Icon name="clock" size={12} strokeWidth={2.2} />

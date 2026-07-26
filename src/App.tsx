@@ -67,6 +67,7 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [formClosing, setFormClosing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [groupByManager, setGroupByManager] = useState(() => localStorage.getItem('rb:groupBy') === '1')
@@ -122,6 +123,25 @@ export default function App() {
     [cases],
   )
 
+  // most-used manager names power the quick-pick chips in the form
+  const managers = useMemo(() => {
+    const freq = new Map<string, number>()
+    cases.forEach((it) => {
+      const m = it.manager.trim()
+      if (m) freq.set(m, (freq.get(m) ?? 0) + 1)
+    })
+    return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m).slice(0, 8)
+  }, [cases])
+
+  const monthDone = useMemo(() => {
+    const now = new Date()
+    return cases.filter((it) => {
+      if (!it.completed || !it.completedAt) return false
+      const d = new Date(it.completedAt)
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+    }).length
+  }, [cases, today])
+
   const todayLabel = useMemo(() => {
     const d = new Date()
     const weekday = d.toLocaleDateString('lt-LT', { weekday: 'long' })
@@ -172,6 +192,26 @@ export default function App() {
     }
   }
 
+  // fade the card out before removing it from the list — the FLIP hook then
+  // glides the remaining cards into place
+  const animateOut = (id: string, after: () => void) => {
+    const el = document.querySelector<HTMLElement>(`[data-flip-id="${id}"]`)
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!el || reduce) {
+      after()
+      return
+    }
+    el.style.pointerEvents = 'none'
+    el.animate(
+      [
+        { opacity: 1, transform: 'scale(1)' },
+        { opacity: 0, transform: 'scale(0.94)' },
+      ],
+      { duration: 200, easing: 'ease-in', fill: 'forwards' },
+    )
+    window.setTimeout(after, 185)
+  }
+
   const showUndo = (label: string, action: () => void) => {
     setUndo({ label, action })
     window.clearTimeout(undoTimer.current)
@@ -181,21 +221,26 @@ export default function App() {
   const handleConfirmComplete = () => {
     if (confirmId) {
       const id = confirmId
-      update(id, { completed: true, completedAt: Date.now() })
       navigator.vibrate?.(30)
       setExpandedId(null)
-      showUndo('Byla perkelta į archyvą', () => update(id, { completed: false, completedAt: null }))
+      animateOut(id, () => {
+        update(id, { completed: true, completedAt: Date.now() })
+        showUndo('Byla perkelta į archyvą', () => update(id, { completed: false, completedAt: null }))
+      })
     }
     setConfirmId(null)
   }
 
   const handleConfirmDelete = () => {
     if (deleteId) {
-      const removed = cases.find((it) => it.id === deleteId)
-      setCases((prev) => prev.filter((it) => it.id !== deleteId))
+      const id = deleteId
+      const removed = cases.find((it) => it.id === id)
       setExpandedId(null)
       navigator.vibrate?.(30)
-      if (removed) showUndo('Byla ištrinta', () => setCases((prev) => [removed, ...prev]))
+      animateOut(id, () => {
+        setCases((prev) => prev.filter((it) => it.id !== id))
+        if (removed) showUndo('Byla ištrinta', () => setCases((prev) => [removed, ...prev]))
+      })
     }
     setDeleteId(null)
   }
@@ -216,6 +261,15 @@ export default function App() {
     setFormOpen(true)
   }
 
+  const closeForm = () => {
+    setFormClosing(true)
+    window.setTimeout(() => {
+      setFormOpen(false)
+      setFormClosing(false)
+      setEditingId(null)
+    }, 240)
+  }
+
   const handleSubmitForm = (draft: CaseDraft) => {
     const now = Date.now()
     if (editingId) {
@@ -234,8 +288,7 @@ export default function App() {
         ...prev,
       ])
     }
-    setFormOpen(false)
-    setEditingId(null)
+    closeForm()
   }
 
   const showDataMsg = (msg: string) => {
@@ -297,19 +350,6 @@ export default function App() {
   const editingItem = editingId ? cases.find((it) => it.id === editingId) : undefined
   const confirmItem = confirmId ? cases.find((it) => it.id === confirmId) : undefined
 
-  if (formOpen) {
-    return (
-      <CaseForm
-        initial={editingItem}
-        onCancel={() => {
-          setFormOpen(false)
-          setEditingId(null)
-        }}
-        onSubmit={handleSubmitForm}
-      />
-    )
-  }
-
   return (
     <div className="screen">
       <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
@@ -347,9 +387,14 @@ export default function App() {
               <div className="header-summary">
                 <span className="header-date">{todayLabel}</span>
                 <span className="header-counts">
-                  Vežti <strong className="c-take">{toTakeCount}</strong>{' '}
+                  Vežti{' '}
+                  <strong key={`t${toTakeCount}`} className="c-take">
+                    {toTakeCount}
+                  </strong>{' '}
                   <span className="dot">·</span> Regitroje{' '}
-                  <strong className="c-reg">{atRegitraCount}</strong>
+                  <strong key={`r${atRegitraCount}`} className="c-reg">
+                    {atRegitraCount}
+                  </strong>
                 </span>
               </div>
             ) : (
@@ -419,7 +464,7 @@ export default function App() {
               <p className="list-caption">
                 {searching
                   ? `Rasta: ${visible.length} ${bylosWord(visible.length)}`
-                  : `Archyve: ${visible.length} ${bylosWord(visible.length)}`}
+                  : `Archyve: ${visible.length} · Šį mėn. užbaigta: ${monthDone}`}
               </p>
               <main className="case-list">
                 {visible.length === 0 && (
@@ -470,6 +515,17 @@ export default function App() {
                 <div className="empty-state">
                   <Icon name="inbox" size={30} strokeWidth={1.6} />
                   <p>Aktyvių bylų nėra.</p>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setEditingId(null)
+                      setFormOpen(true)
+                    }}
+                  >
+                    <Icon name="plus" size={18} strokeWidth={2.4} />
+                    Pridėti bylą
+                  </button>
                 </div>
               </main>
             ) : (
@@ -545,6 +601,12 @@ export default function App() {
           }}
           onCancel={() => setPendingImport(null)}
         />
+      )}
+
+      {formOpen && (
+        <div className={`form-overlay${formClosing ? ' closing' : ''}`}>
+          <CaseForm initial={editingItem} managers={managers} onCancel={closeForm} onSubmit={handleSubmitForm} />
+        </div>
       )}
 
       {undo && (

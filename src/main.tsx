@@ -13,6 +13,14 @@ if (!document.querySelector('meta[name="color-scheme"]')) {
 }
 document.documentElement.style.colorScheme = 'dark'
 
+// offline support for the installed app — only on the real deployment host,
+// never inside the claude.ai artifact preview or local dev
+if ('serviceWorker' in navigator && location.hostname.endsWith('.github.io')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {})
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

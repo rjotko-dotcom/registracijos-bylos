@@ -47,6 +47,10 @@ export function CaseCard({
       ? Math.floor((Date.now() - item.regitraAt) / DAY)
       : 0
 
+  // days the case has been sitting with the registrar, not yet driven anywhere
+  const withMeDays =
+    !item.completed && !item.regitraDone ? Math.floor((Date.now() - Date.parse(item.date)) / DAY) : 0
+
   const copyValue = async (field: string, value: string) => {
     if (!value) return
     try {
@@ -246,6 +250,12 @@ export function CaseCard({
             <div className={`case-age${regitraDays >= 5 ? ' late' : ''}`}>
               <Icon name="clock" size={12} strokeWidth={2.2} />
               Regitroje {regitraDays} d.
+            </div>
+          )}
+          {withMeDays >= 3 && (
+            <div className={`case-age${withMeDays >= 6 ? ' late' : ''}`}>
+              <Icon name="clock" size={12} strokeWidth={2.2} />
+              Pas tave {withMeDays} d.
             </div>
           )}
         </div>

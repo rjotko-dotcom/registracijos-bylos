@@ -55,7 +55,7 @@ export const sampleCases: RegistrationCase[] = [
     vehicleCount: 5,
     notes: 'Fleet užsakymas — dokumentai bendri.',
   }),
-  c('s5', 'Nissan', 'X-Trail', '7788', 'KGG778', 'Paulius V.', 1, 'L3', {
+  c('s5', 'Nissan', 'X-Trail', '7788', 'KGG778', 'Paulius V.', 4, 'L3', {
     techSheet: 'have',
   }),
   c('s6', 'Hyundai', 'i30', '6655', 'JJJ333', 'Eglė K.', 1, 'L1', {

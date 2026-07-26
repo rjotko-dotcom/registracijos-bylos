@@ -13,6 +13,10 @@ if (!document.querySelector('meta[name="color-scheme"]')) {
 }
 document.documentElement.style.colorScheme = 'dark'
 
+// ask the OS not to evict this app's local data under storage pressure —
+// the case list lives only in this browser profile
+navigator.storage?.persist?.().catch(() => {})
+
 // offline support for the installed app — only on the real deployment host,
 // never inside the claude.ai artifact preview or local dev
 if ('serviceWorker' in navigator && location.hostname.endsWith('.github.io')) {

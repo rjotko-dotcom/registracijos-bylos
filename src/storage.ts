@@ -18,8 +18,10 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
     delete out.techSheetNeeded
   }
   if (!out.techSheet) out.techSheet = 'none'
-  if (!out.apziura) out.apziura = 'none'
-  if (!out.tapatybe) out.tapatybe = 'none'
+  if (!out.caseType) out.caseType = 'registracija'
+  // drop fields from the short-lived extra-tasks experiment
+  delete (out as unknown as Record<string, unknown>).apziura
+  delete (out as unknown as Record<string, unknown>).tapatybe
   if (out.regitraAt === undefined) {
     out.regitraAt = out.regitraDone ? Date.now() : null
   }

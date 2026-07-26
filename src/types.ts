@@ -1,6 +1,6 @@
 export type Salon = 'L1' | 'L3'
 export type TechSheet = 'none' | 'needed' | 'have'
-export type TaskState = 'none' | 'needed' | 'done'
+export type CaseType = 'registracija' | 'apziura' | 'tapatybe'
 
 export interface RegistrationCase {
   id: string
@@ -13,9 +13,8 @@ export interface RegistrationCase {
   salon: Salon
   fleet: boolean
   vehicleCount: number
+  caseType: CaseType
   techSheet: TechSheet
-  apziura: TaskState // vehicle needs a technical inspection trip
-  tapatybe: TaskState // identity verification queue at Regitra
   regitraDone: boolean
   regitraAt: number | null // when the documents were left at Regitra
   completed: boolean

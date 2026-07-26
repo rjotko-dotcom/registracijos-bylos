@@ -14,7 +14,6 @@ interface CaseCardProps {
   onEdit: (id: string) => void
   onRestore?: (id: string) => void
   onRequestDelete: (id: string) => void
-  onToggleTask: (id: string, task: 'apziura' | 'tapatybe') => void
 }
 
 const SWIPE_TRIGGER = 88
@@ -35,7 +34,6 @@ export function CaseCard({
   onEdit,
   onRestore,
   onRequestDelete,
-  onToggleTask,
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
   const [saved, setSaved] = useState(false)
@@ -157,7 +155,7 @@ export function CaseCard({
     if (!s.active) return
     if (s.horizontal && !s.fired) {
       const dx = e.clientX - s.startX
-      if (dx >= SWIPE_TRIGGER && s.armed) {
+      if (dx >= SWIPE_TRIGGER && s.armed && item.caseType === 'registracija') {
         s.fired = true
         onToggleRegitra(item.id)
       } else if (dx <= -SWIPE_TRIGGER) {
@@ -178,13 +176,15 @@ export function CaseCard({
     <article className={`case-card${item.completed ? ' is-completed' : ''}`} data-flip-id={item.id}>
       <div className="row-zone">
       <div className="swipe-layer" aria-hidden="true">
-        <span
-          className={`swipe-hint left${swipedRight ? ' visible' : ''}${
-            holdArmed ? ' armed' : offset >= SWIPE_TRIGGER ? ' waiting' : ''
-          }`}
-        >
-          <Icon name="landmark" size={20} />
-        </span>
+        {item.caseType === 'registracija' && (
+          <span
+            className={`swipe-hint left${swipedRight ? ' visible' : ''}${
+              holdArmed ? ' armed' : offset >= SWIPE_TRIGGER ? ' waiting' : ''
+            }`}
+          >
+            <Icon name="landmark" size={20} />
+          </span>
+        )}
         <span className={`swipe-hint right${swipedLeft ? ' visible' : ''}${offset <= -SWIPE_TRIGGER ? ' armed' : ''}`}>
           <Icon name="check" size={20} strokeWidth={2.4} />
         </span>
@@ -222,6 +222,12 @@ export function CaseCard({
           <div className="case-title-line">
             <span className="case-model">{item.model}</span>
             <span className={`salon-badge salon-${item.salon.toLowerCase()}`}>{item.salon}</span>
+            {item.caseType !== 'registracija' && (
+              <span className={`type-badge type-${item.caseType}`}>
+                <Icon name={item.caseType === 'apziura' ? 'wrench' : 'idCard'} size={11} strokeWidth={2.4} />
+                {item.caseType === 'apziura' ? 'Apžiūra' : 'Tapatybė'}
+              </span>
+            )}
           </div>
           <div className="case-sub">
             VIN: {item.vin || '—'} <span className="dot">•</span> {item.regNumber || '—'}
@@ -236,42 +242,9 @@ export function CaseCard({
               Regitroje {regitraDays} d.
             </div>
           )}
-          {(item.apziura !== 'none' || item.tapatybe !== 'none') && (
-            <div className="task-chips">
-              {item.apziura !== 'none' && (
-                <button
-                  type="button"
-                  className={`task-chip${item.apziura === 'done' ? ' done' : ''}`}
-                  aria-label={item.apziura === 'done' ? 'Apžiūra atlikta' : 'Reikia techninės apžiūros'}
-                  aria-pressed={item.apziura === 'done'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleTask(item.id, 'apziura')
-                  }}
-                >
-                  <Icon name={item.apziura === 'done' ? 'check' : 'wrench'} size={12} strokeWidth={2.4} />
-                  Apžiūra
-                </button>
-              )}
-              {item.tapatybe !== 'none' && (
-                <button
-                  type="button"
-                  className={`task-chip${item.tapatybe === 'done' ? ' done' : ''}`}
-                  aria-label={item.tapatybe === 'done' ? 'Tapatybė atlikta' : 'Reikia tapatybės nustatymo'}
-                  aria-pressed={item.tapatybe === 'done'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleTask(item.id, 'tapatybe')
-                  }}
-                >
-                  <Icon name={item.tapatybe === 'done' ? 'check' : 'idCard'} size={12} strokeWidth={2.4} />
-                  Tapatybė
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
+        {item.caseType === 'registracija' && (
         <button
           type="button"
           className={`icon-btn doc-btn ${
@@ -295,14 +268,17 @@ export function CaseCard({
             size={21}
           />
         </button>
+        )}
 
-        <span
-          className={`regitra-status${item.regitraDone ? ' active' : ''}`}
-          role="img"
-          aria-label={item.regitraDone ? 'Palikta Regitroje' : 'Nepalikta Regitroje'}
-        >
-          <Icon name="landmark" size={21} />
-        </span>
+        {item.caseType === 'registracija' && (
+          <span
+            className={`regitra-status${item.regitraDone ? ' active' : ''}`}
+            role="img"
+            aria-label={item.regitraDone ? 'Palikta Regitroje' : 'Nepalikta Regitroje'}
+          >
+            <Icon name="landmark" size={21} />
+          </span>
+        )}
       </div>
 
       </div>

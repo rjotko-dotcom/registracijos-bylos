@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CaseDraft, RegistrationCase, Salon, TaskState, TechSheet } from '../types'
+import type { CaseDraft, CaseType, RegistrationCase, Salon, TechSheet } from '../types'
 import { Icon } from './Icon'
 import { useScrolled } from '../useScrolled'
 
@@ -56,9 +56,8 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
   const [salon, setSalon] = useState<Salon>(initial?.salon ?? 'L1')
   const [fleet, setFleet] = useState(initial?.fleet ?? false)
   const [vehicleCount, setVehicleCount] = useState(initial?.vehicleCount ?? 1)
+  const [caseType, setCaseType] = useState<CaseType>(initial?.caseType ?? 'registracija')
   const [techSheet, setTechSheet] = useState<TechSheet>(initial?.techSheet ?? 'none')
-  const [apziura, setApziura] = useState<TaskState>(initial?.apziura ?? 'none')
-  const [tapatybe, setTapatybe] = useState<TaskState>(initial?.tapatybe ?? 'none')
   const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
@@ -84,10 +83,9 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
       salon,
       fleet,
       vehicleCount: fleet ? Math.max(1, vehicleCount) : 1,
-      techSheet,
-      apziura,
-      tapatybe,
-      regitraDone,
+      caseType,
+      techSheet: caseType === 'registracija' ? techSheet : 'none',
+      regitraDone: caseType === 'registracija' ? regitraDone : false,
       notes: notes.trim(),
       completed: initial?.completed ?? false,
     })
@@ -103,6 +101,28 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
       </header>
 
       <form className="case-form" onSubmit={handleSubmit} noValidate>
+        <div className="field">
+          <span className="field-label">Bylos rūšis</span>
+          <div className="segmented" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {(
+              [
+                ['registracija', 'Registracija'],
+                ['apziura', 'Apžiūra'],
+                ['tapatybe', 'Tapatybė'],
+              ] as [CaseType, string][]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={caseType === value ? `active${value !== 'registracija' ? ' warn-soft' : ''}` : ''}
+                onClick={() => setCaseType(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="field">
           <span className="field-label">Markė</span>
           <div
@@ -239,6 +259,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
           </div>
         )}
 
+        {caseType === 'registracija' && (
         <div className="field">
           <span className="field-label">Techninis lapas</span>
           <div className="segmented" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
@@ -260,31 +281,9 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
             ))}
           </div>
         </div>
+        )}
 
-        <div className="field">
-          <span className="field-label">Papildomos užduotys</span>
-          <div className="task-select">
-            <button
-              type="button"
-              className={`task-option${apziura !== 'none' ? ' active' : ''}`}
-              aria-pressed={apziura !== 'none'}
-              onClick={() => setApziura(apziura === 'none' ? 'needed' : 'none')}
-            >
-              <Icon name="wrench" size={16} />
-              Techninė apžiūra
-            </button>
-            <button
-              type="button"
-              className={`task-option${tapatybe !== 'none' ? ' active' : ''}`}
-              aria-pressed={tapatybe !== 'none'}
-              onClick={() => setTapatybe(tapatybe === 'none' ? 'needed' : 'none')}
-            >
-              <Icon name="idCard" size={16} />
-              Tapatybės nustatymas
-            </button>
-          </div>
-        </div>
-
+        {caseType === 'registracija' && (
         <div className="toggle-row">
           <span className="field-label">Atiduota Regitrai</span>
           <button
@@ -297,6 +296,7 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
             <span className="knob" />
           </button>
         </div>
+        )}
 
         <div className="field">
           <label htmlFor="f-notes">Pastabos</label>

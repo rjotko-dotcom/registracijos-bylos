@@ -153,15 +153,6 @@ export default function App() {
           : it,
       ),
     )
-  const handleToggleTask = (id: string, task: 'apziura' | 'tapatybe') =>
-    setCases((prev) =>
-      prev.map((it) =>
-        it.id === id && it[task] !== 'none'
-          ? { ...it, [task]: it[task] === 'needed' ? 'done' : 'needed' }
-          : it,
-      ),
-    )
-
   const handleToggleRegitra = (id: string) =>
     setCases((prev) =>
       prev.map((it) =>
@@ -419,7 +410,6 @@ export default function App() {
             onEdit={handleEdit}
             onRestore={view === 'archive' ? handleRestore : undefined}
             onRequestDelete={(id) => setDeleteId(id)}
-            onToggleTask={handleToggleTask}
           />
         )
 
@@ -484,7 +474,7 @@ export default function App() {
               </main>
             ) : (
               <>
-                <p className="list-caption cap-take">Vežti į Regitrą · {toTake.length}</p>
+                <p className="list-caption cap-take">Vežti · {toTake.length}</p>
                 <main className="case-list">{toTake.map(renderCard)}</main>
 
                 <div className="list-caption-row">

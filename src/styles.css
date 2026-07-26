@@ -5,29 +5,29 @@
    ============================================================ */
 
 :root {
-  --bg: #0c1024;
-  --surface: #151a36;
-  --surface-2: #1e2547;
-  --line: #272f56;
-  --line-strong: #38427a;
+  --bg: #09090b;
+  --surface: #131317;
+  --surface-2: #1c1c22;
+  --line: #26262e;
+  --line-strong: #35353f;
 
-  --text: #eef1ff;
-  --text-2: #9ba6d5;
-  --text-3: #7681b3;
+  --text: #f4f4f5;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
 
-  --accent: #7c8aff;
-  --accent-dim: rgba(124, 138, 255, 0.15);
-  --accent-line: rgba(124, 138, 255, 0.4);
-  --violet: #b98cff;
-  --violet-dim: rgba(185, 140, 255, 0.15);
-  --violet-line: rgba(185, 140, 255, 0.4);
-  --ok: #35d69b;
-  --ok-dim: rgba(53, 214, 155, 0.14);
-  --ok-line: rgba(53, 214, 155, 0.42);
-  --bad: #ff6b7a;
-  --bad-dim: rgba(255, 107, 122, 0.14);
-  --bad-line: rgba(255, 107, 122, 0.42);
-  --warn: #ffb54d;
+  --accent: #0a84ff;
+  --accent-dim: rgba(10, 132, 255, 0.14);
+  --accent-line: rgba(10, 132, 255, 0.4);
+  --accent-2: #64d2ff;
+  --accent-2-dim: rgba(100, 210, 255, 0.13);
+  --accent-2-line: rgba(100, 210, 255, 0.4);
+  --ok: #30d158;
+  --ok-dim: rgba(48, 209, 88, 0.13);
+  --ok-line: rgba(48, 209, 88, 0.42);
+  --bad: #ff453a;
+  --bad-dim: rgba(255, 69, 58, 0.13);
+  --bad-line: rgba(255, 69, 58, 0.42);
+  --warn: #ff9f0a;
 
   --r-card: 18px;
   --r-ctl: 12px;
@@ -113,7 +113,7 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(12, 16, 36, 0.82);
+  background: rgba(9, 9, 11, 0.82);
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
   backdrop-filter: blur(16px) saturate(1.3);
   border-bottom: 1px solid transparent;
@@ -170,7 +170,7 @@ textarea {
 }
 
 .header-counts .c-reg {
-  color: var(--violet);
+  color: var(--accent-2);
 }
 
 .header-title {
@@ -250,7 +250,7 @@ textarea {
 }
 
 .list-caption.cap-reg::before {
-  background: var(--violet);
+  background: var(--accent-2);
 }
 
 .list-caption-row {
@@ -484,7 +484,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d8ddff;
+  color: #d4d4d8;
   margin-right: 4px;
 }
 
@@ -583,8 +583,8 @@ textarea {
 }
 
 .salon-badge.salon-l3 {
-  color: var(--violet);
-  background: var(--violet-dim);
+  color: var(--accent-2);
+  background: var(--accent-2-dim);
 }
 
 /* ---------- Card controls ---------- */
@@ -806,7 +806,7 @@ textarea {
 
 .btn-success {
   background: var(--ok);
-  color: #062b1e;
+  color: #04290f;
 }
 
 .btn-success:active {
@@ -834,7 +834,7 @@ textarea {
 .dialog-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(5, 7, 18, 0.6);
+  background: rgba(0, 0, 0, 0.62);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 50;
@@ -1109,7 +1109,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: rgba(30, 37, 71, 0.9);
+  background: rgba(28, 28, 34, 0.92);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid var(--line-strong);

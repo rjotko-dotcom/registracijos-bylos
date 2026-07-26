@@ -30,6 +30,8 @@ function c(
     fleet: false,
     vehicleCount: 1,
     techSheet: 'none',
+    apziura: 'none',
+    tapatybe: 'none',
     regitraDone: false,
     regitraAt: null,
     completed: false,
@@ -42,7 +44,9 @@ function c(
 
 export const sampleCases: RegistrationCase[] = [
   c('s1', 'Nissan', 'Qashqai', '4EG7', 'MRH468', 'Mantas J.', 0, 'L1'),
-  c('s2', 'Hyundai', 'Tucson', '1391', 'DDV589', 'Dovydas P.', 0, 'L1'),
+  c('s2', 'Hyundai', 'Tucson', '1391', 'DDV589', 'Dovydas P.', 0, 'L1', {
+    tapatybe: 'needed',
+  }),
   c('s3', 'Nissan', 'Juke', '7789', 'KGG777', 'Justinas R.', 0, 'L1', {
     techSheet: 'needed',
     notes: 'Trūksta techninio lapo iš serviso.',
@@ -57,6 +61,7 @@ export const sampleCases: RegistrationCase[] = [
   }),
   c('s6', 'Hyundai', 'i30', '6655', 'JJJ333', 'Eglė K.', 1, 'L1', {
     techSheet: 'needed',
+    apziura: 'needed',
   }),
   c('s7', 'Hyundai', 'Kona', '9988', 'KNA868', 'Simona L.', 2, 'L3', {
     regitraDone: true,

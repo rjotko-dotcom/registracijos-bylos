@@ -18,6 +18,8 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
     delete out.techSheetNeeded
   }
   if (!out.techSheet) out.techSheet = 'none'
+  if (!out.apziura) out.apziura = 'none'
+  if (!out.tapatybe) out.tapatybe = 'none'
   if (out.regitraAt === undefined) {
     out.regitraAt = out.regitraDone ? Date.now() : null
   }

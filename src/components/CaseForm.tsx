@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CaseDraft, RegistrationCase, Salon, TechSheet } from '../types'
+import type { CaseDraft, RegistrationCase, Salon, TaskState, TechSheet } from '../types'
 import { Icon } from './Icon'
 import { useScrolled } from '../useScrolled'
 
@@ -57,6 +57,8 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
   const [fleet, setFleet] = useState(initial?.fleet ?? false)
   const [vehicleCount, setVehicleCount] = useState(initial?.vehicleCount ?? 1)
   const [techSheet, setTechSheet] = useState<TechSheet>(initial?.techSheet ?? 'none')
+  const [apziura, setApziura] = useState<TaskState>(initial?.apziura ?? 'none')
+  const [tapatybe, setTapatybe] = useState<TaskState>(initial?.tapatybe ?? 'none')
   const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
@@ -83,6 +85,8 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
       fleet,
       vehicleCount: fleet ? Math.max(1, vehicleCount) : 1,
       techSheet,
+      apziura,
+      tapatybe,
       regitraDone,
       notes: notes.trim(),
       completed: initial?.completed ?? false,
@@ -254,6 +258,30 @@ export function CaseForm({ initial, onCancel, onSubmit }: CaseFormProps) {
                 {label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="field">
+          <span className="field-label">Papildomos užduotys</span>
+          <div className="task-select">
+            <button
+              type="button"
+              className={`task-option${apziura !== 'none' ? ' active' : ''}`}
+              aria-pressed={apziura !== 'none'}
+              onClick={() => setApziura(apziura === 'none' ? 'needed' : 'none')}
+            >
+              <Icon name="wrench" size={16} />
+              Techninė apžiūra
+            </button>
+            <button
+              type="button"
+              className={`task-option${tapatybe !== 'none' ? ' active' : ''}`}
+              aria-pressed={tapatybe !== 'none'}
+              onClick={() => setTapatybe(tapatybe === 'none' ? 'needed' : 'none')}
+            >
+              <Icon name="idCard" size={16} />
+              Tapatybės nustatymas
+            </button>
           </div>
         </div>
 

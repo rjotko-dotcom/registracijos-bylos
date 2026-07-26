@@ -569,6 +569,39 @@ textarea {
   color: var(--bad);
 }
 
+.task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warn);
+  background: rgba(255, 159, 10, 0.13);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.task-chip:active {
+  transform: scale(0.95);
+}
+
+.task-chip.done {
+  color: var(--ok);
+  background: var(--ok-dim);
+}
+
 .dot {
   color: var(--text-3);
   padding: 0 1px;
@@ -1215,6 +1248,40 @@ textarea {
   background: var(--accent);
   background-image: linear-gradient(var(--accent), var(--accent));
   color: var(--on-accent);
+}
+
+/* ---------- Form task options ---------- */
+
+.task-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 14px;
+  border-radius: var(--r-ctl);
+  background: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--surface));
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 600;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.task-option.active {
+  color: var(--warn);
+  border-color: rgba(255, 159, 10, 0.45);
+  background: rgba(255, 159, 10, 0.1);
+  background-image: none;
 }
 
 /* ---------- Undo toast ---------- */

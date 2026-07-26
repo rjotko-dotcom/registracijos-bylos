@@ -153,6 +153,15 @@ export default function App() {
           : it,
       ),
     )
+  const handleToggleTask = (id: string, task: 'apziura' | 'tapatybe') =>
+    setCases((prev) =>
+      prev.map((it) =>
+        it.id === id && it[task] !== 'none'
+          ? { ...it, [task]: it[task] === 'needed' ? 'done' : 'needed' }
+          : it,
+      ),
+    )
+
   const handleToggleRegitra = (id: string) =>
     setCases((prev) =>
       prev.map((it) =>
@@ -410,6 +419,7 @@ export default function App() {
             onEdit={handleEdit}
             onRestore={view === 'archive' ? handleRestore : undefined}
             onRequestDelete={(id) => setDeleteId(id)}
+            onToggleTask={handleToggleTask}
           />
         )
 

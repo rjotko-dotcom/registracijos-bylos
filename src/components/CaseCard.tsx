@@ -14,6 +14,7 @@ interface CaseCardProps {
   onEdit: (id: string) => void
   onRestore?: (id: string) => void
   onRequestDelete: (id: string) => void
+  onToggleTask: (id: string, task: 'apziura' | 'tapatybe') => void
 }
 
 const SWIPE_TRIGGER = 88
@@ -34,6 +35,7 @@ export function CaseCard({
   onEdit,
   onRestore,
   onRequestDelete,
+  onToggleTask,
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
   const [saved, setSaved] = useState(false)
@@ -232,6 +234,40 @@ export function CaseCard({
             <div className={`case-age${regitraDays >= 5 ? ' late' : ''}`}>
               <Icon name="clock" size={12} strokeWidth={2.2} />
               Regitroje {regitraDays} d.
+            </div>
+          )}
+          {(item.apziura !== 'none' || item.tapatybe !== 'none') && (
+            <div className="task-chips">
+              {item.apziura !== 'none' && (
+                <button
+                  type="button"
+                  className={`task-chip${item.apziura === 'done' ? ' done' : ''}`}
+                  aria-label={item.apziura === 'done' ? 'Apžiūra atlikta' : 'Reikia techninės apžiūros'}
+                  aria-pressed={item.apziura === 'done'}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleTask(item.id, 'apziura')
+                  }}
+                >
+                  <Icon name={item.apziura === 'done' ? 'check' : 'wrench'} size={12} strokeWidth={2.4} />
+                  Apžiūra
+                </button>
+              )}
+              {item.tapatybe !== 'none' && (
+                <button
+                  type="button"
+                  className={`task-chip${item.tapatybe === 'done' ? ' done' : ''}`}
+                  aria-label={item.tapatybe === 'done' ? 'Tapatybė atlikta' : 'Reikia tapatybės nustatymo'}
+                  aria-pressed={item.tapatybe === 'done'}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleTask(item.id, 'tapatybe')
+                  }}
+                >
+                  <Icon name={item.tapatybe === 'done' ? 'check' : 'idCard'} size={12} strokeWidth={2.4} />
+                  Tapatybė
+                </button>
+              )}
             </div>
           )}
         </div>

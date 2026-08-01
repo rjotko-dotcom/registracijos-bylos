@@ -598,6 +598,24 @@ textarea {
   color: var(--bad);
 }
 
+.case-res {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent-2);
+  margin-top: 2px;
+}
+
+.case-res.soon {
+  color: var(--warn);
+}
+
+.case-res.now {
+  color: var(--bad);
+}
+
 .case-done {
   display: inline-flex;
   align-items: center;
@@ -1228,6 +1246,70 @@ textarea {
   font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Fleet vehicle list & reservation ---------- */
+
+.fleet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fleet-row + .fleet-row {
+  margin-top: 8px;
+}
+
+.fleet-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.fleet-row .stepper {
+  flex-shrink: 0;
+  padding: 3px;
+  gap: 2px;
+}
+
+.fleet-row .stepper button {
+  width: 36px;
+  height: 36px;
+}
+
+.fleet-row .stepper-value {
+  min-width: 26px;
+  font-size: 15.5px;
+}
+
+.fleet-remove {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+  color: var(--text-2);
+}
+
+.fleet-remove:disabled {
+  opacity: 0.3;
+}
+
+.fleet-add {
+  margin-top: 10px;
+  height: 44px;
+  width: 100%;
+}
+
+.reserved-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reserved-row input {
+  flex: 1;
+  min-width: 0;
 }
 
 .form-error {

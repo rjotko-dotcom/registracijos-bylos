@@ -51,6 +51,14 @@ export function CaseCard({
   const withMeDays =
     !item.completed && !item.regitraDone ? Math.floor((Date.now() - Date.parse(item.date)) / DAY) : 0
 
+  // days until the Regitra reservation (0 = today, negative = passed)
+  const resDiff =
+    item.reservedAt && !item.completed
+      ? Math.round(
+          (new Date(item.reservedAt).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / DAY,
+        )
+      : null
+
   const copyValue = async (field: string, value: string) => {
     if (!value) return
     try {
@@ -272,6 +280,16 @@ export function CaseCard({
             {item.manager} <span className="dot">•</span> {item.date}
           </div>
           {item.fleet && <div className="case-fleet">Fleet ({item.vehicleCount})</div>}
+          {resDiff !== null && (
+            <div className={`case-res${resDiff <= 0 ? ' now' : resDiff === 1 ? ' soon' : ''}`}>
+              <Icon name="calendar" size={12} strokeWidth={2.2} />
+              {resDiff === 0
+                ? 'Rezervacija šiandien'
+                : resDiff === 1
+                  ? 'Rezervacija rytoj'
+                  : `Rezervacija ${item.reservedAt.slice(5).replace('-', '.')}`}
+            </div>
+          )}
           {item.completed && item.completedAt && (
             <div className="case-done">
               <Icon name="check" size={12} strokeWidth={2.6} />
@@ -369,10 +387,20 @@ export function CaseCard({
               <span className="notes-detail-label">Data</span>
               <span className="notes-detail-value">{item.date}</span>
             </div>
+            {item.reservedAt && (
+              <div className="notes-detail">
+                <span className="notes-detail-label">Rezervacija</span>
+                <span className="notes-detail-value">{item.reservedAt}</span>
+              </div>
+            )}
             {item.fleet && (
               <div className="notes-detail">
                 <span className="notes-detail-label">Automobiliai</span>
-                <span className="notes-detail-value">{item.vehicleCount}</span>
+                <span className="notes-detail-value">
+                  {item.fleetVehicles.length > 0
+                    ? item.fleetVehicles.map((v) => `${v.model} ×${v.count}`).join(', ')
+                    : item.vehicleCount}
+                </span>
               </div>
             )}
           </div>

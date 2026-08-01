@@ -25,6 +25,10 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
   if (out.regitraAt === undefined) {
     out.regitraAt = out.regitraDone ? Date.now() : null
   }
+  if (typeof out.reservedAt !== 'string') out.reservedAt = ''
+  if (!Array.isArray(out.fleetVehicles)) {
+    out.fleetVehicles = out.fleet ? [{ model: out.model, count: out.vehicleCount || 1 }] : []
+  }
   return out
 }
 

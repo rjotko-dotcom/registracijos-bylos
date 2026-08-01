@@ -26,9 +26,11 @@ function c(
     regNumber,
     manager,
     date: daysAgo(ageDays),
+    reservedAt: '',
     salon,
     fleet: false,
     vehicleCount: 1,
+    fleetVehicles: [],
     caseType: 'registracija',
     techSheet: 'none',
     regitraDone: false,
@@ -53,7 +55,14 @@ export const sampleCases: RegistrationCase[] = [
   c('s4', 'Citroen', 'Berlingo x3, Jumpy x2', '6671', 'FLT001', 'Greta P.', 1, 'L3', {
     fleet: true,
     vehicleCount: 5,
+    fleetVehicles: [
+      { model: 'Berlingo', count: 3 },
+      { model: 'Jumpy', count: 2 },
+    ],
     notes: 'Fleet užsakymas — dokumentai bendri.',
+  }),
+  c('s14', 'Nissan', 'Ariya', '9001', 'REZ001', 'Simona L.', 1, 'L1', {
+    reservedAt: new Date(NOW + 1 * DAY).toISOString().slice(0, 10),
   }),
   c('s5', 'Nissan', 'X-Trail', '7788', 'KGG778', 'Paulius V.', 4, 'L3', {
     techSheet: 'have',

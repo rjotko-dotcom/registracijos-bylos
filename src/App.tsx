@@ -48,6 +48,19 @@ function bylosWord(n: number): string {
   return 'bylų'
 }
 
+function autoWord(n: number): string {
+  const last = n % 10
+  const teens = n % 100 >= 11 && n % 100 <= 19
+  if (last === 1 && !teens) return 'automobilis'
+  if (last >= 2 && last <= 9 && !teens) return 'automobiliai'
+  return 'automobilių'
+}
+
+// a fleet case counts as all its vehicles, a plain case as one
+function vehiclesOf(it: RegistrationCase): number {
+  return it.fleet ? Math.max(1, it.vehicleCount) : 1
+}
+
 function matchesQuery(item: RegistrationCase, query: string): boolean {
   const q = query.trim().toLowerCase()
   if (!q) return true
@@ -213,13 +226,26 @@ export default function App() {
     return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m).slice(0, 8)
   }, [cases])
 
-  const monthDone = useMemo(() => {
+  // archive statistics in vehicles, not cases — a fleet of 5 counts as 5
+  const archiveStats = useMemo(() => {
     const now = new Date()
-    return cases.filter((it) => {
-      if (!it.completed || !it.completedAt) return false
-      const d = new Date(it.completedAt)
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-    }).length
+    let allCases = 0
+    let allVehicles = 0
+    let monthCases = 0
+    let monthVehicles = 0
+    cases.forEach((it) => {
+      if (!it.completed) return
+      allCases++
+      allVehicles += vehiclesOf(it)
+      if (it.completedAt) {
+        const d = new Date(it.completedAt)
+        if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+          monthCases++
+          monthVehicles += vehiclesOf(it)
+        }
+      }
+    })
+    return { allCases, allVehicles, monthCases, monthVehicles }
   }, [cases, today])
 
   const todayLabel = useMemo(() => {
@@ -694,11 +720,18 @@ export default function App() {
         if (searching || view === 'archive') {
           return (
             <>
-              <p className="list-caption">
-                {searching
-                  ? `Rasta: ${visible.length} ${bylosWord(visible.length)}`
-                  : `Archyve: ${visible.length} · Šį mėn. užbaigta: ${monthDone}`}
-              </p>
+              {searching ? (
+                <p className="list-caption">{`Rasta: ${visible.length} ${bylosWord(visible.length)}`}</p>
+              ) : (
+                <>
+                  <p className="list-caption">
+                    {`Archyve: ${archiveStats.allCases} ${bylosWord(archiveStats.allCases)} · ${archiveStats.allVehicles} ${autoWord(archiveStats.allVehicles)}`}
+                  </p>
+                  <p className="section-hint">
+                    {`Šį mėnesį užbaigta: ${archiveStats.monthCases} ${bylosWord(archiveStats.monthCases)} · ${archiveStats.monthVehicles} ${autoWord(archiveStats.monthVehicles)}`}
+                  </p>
+                </>
+              )}
               <main className="case-list">
                 {visible.length === 0 && (
                   <div className="empty-state">

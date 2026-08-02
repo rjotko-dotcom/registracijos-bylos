@@ -6,8 +6,10 @@ import { Sheet } from '../components/Sheet';
 import { PixelIcon } from '../components/PixelIcon';
 import { useNow } from '../hooks/useNow';
 import { computeNextMeal } from '../domain/scheduling';
+import { computeMood } from '../domain/mood';
 import { levelFraction } from '../domain/xp';
 import { timeOfDay } from '../domain/timeOfDay';
+import { COLLECTIBLES } from '../domain/collectibles';
 import { fmtAgo, fmtCountdown, fmtTime, toLocalInputValue } from '../utils/format';
 import type { FoodType } from '../domain/models';
 import { catBus } from '../cat/bus';
@@ -24,6 +26,7 @@ export function HomePage() {
   const feedingLogs = useAppStore((s) => s.feedingLogs);
   const careTasks = useAppStore((s) => s.careTasks);
   const careLogs = useAppStore((s) => s.careLogs);
+  const unlocked = useAppStore((s) => s.unlocked);
   const streak = useAppStore((s) => s.streak);
   const logFeeding = useAppStore((s) => s.logFeeding);
   const deleteFeeding = useAppStore((s) => s.deleteFeeding);
@@ -39,28 +42,47 @@ export function HomePage() {
   const lastMeal = feedingLogs[0] ?? null;
   const next = useMemo(() => computeNextMeal(now, schedules, lastMeal), [now, schedules, lastMeal]);
   const timeFormat = settings?.timeFormat ?? '24';
+  const today = now.toDateString();
 
-  const greeting = t(`greeting.${timeOfDay(now)}`);
+  const doneToday = (taskId: string) => careLogs.some((l) => l.taskId === taskId && new Date(l.doneAt).toDateString() === today);
+  const caredToday = useMemo(
+    () => new Set(careLogs.filter((l) => new Date(l.doneAt).toDateString() === today).map((l) => l.taskId)).size,
+    [careLogs, today],
+  );
+
+  const mood = useMemo(
+    () =>
+      computeMood({
+        now,
+        lastFedAt: lastMeal ? new Date(lastMeal.fedAt) : null,
+        overdue: next.overdue,
+        caredToday,
+        asleep: timeOfDay(now) === 'night',
+      }),
+    [now, lastMeal, next.overdue, caredToday],
+  );
+
+  const moodName = `home.mood${mood.key.charAt(0).toUpperCase()}${mood.key.slice(1)}`;
 
   const quickFeed = async () => {
-    const lastType = lastMeal?.foodType ?? 'dry';
-    const lastAmount = lastMeal?.amountGrams ?? 40;
-    const log = await logFeeding({ foodType: lastType, amountGrams: lastAmount });
+    const log = await logFeeding({
+      foodType: lastMeal?.foodType ?? 'dry',
+      amountGrams: lastMeal?.amountGrams ?? 40,
+    });
     if (log) {
       catBus.emit('fed');
       AudioManager.playPop();
-      pushToast({
-        text: t('home.fedToast'),
-        kind: 'success',
-        undo: () => void deleteFeeding(log.id),
-      });
+      pushToast({ text: t('home.fedToast'), kind: 'success', undo: () => void deleteFeeding(log.id) });
     }
   };
 
   const detailedFeed = async () => {
-    const fedAt = customTime ? new Date(customTime) : undefined;
-    const grams = Math.max(1, parseInt(amount, 10) || 40);
-    const log = await logFeeding({ foodType, amountGrams: grams, note: note.trim() || undefined, fedAt });
+    const log = await logFeeding({
+      foodType,
+      amountGrams: Math.max(1, parseInt(amount, 10) || 40),
+      note: note.trim() || undefined,
+      fedAt: customTime ? new Date(customTime) : undefined,
+    });
     if (log) {
       catBus.emit('fed');
       setSheetOpen(false);
@@ -70,110 +92,142 @@ export function HomePage() {
     }
   };
 
-  const enabledCare = careTasks.filter((c) => c.enabled).slice(0, 4);
-  const doneToday = (taskId: string) =>
-    careLogs.some((l) => l.taskId === taskId && new Date(l.doneAt).toDateString() === now.toDateString());
+  const enabledCare = careTasks.filter((c) => c.enabled).sort((a, b) => a.order - b.order).slice(0, 4);
+  const collected = unlocked.length;
+  const allFound = collected >= COLLECTIBLES.length;
+
+  // Status cards float over the room, the way a game HUD sits on its scene.
+  const sceneCards = (
+    <>
+      <div className="scene-card left">
+        <div className="label">{t('home.lastMeal')}</div>
+        {lastMeal ? (
+          <>
+            <div className="value">
+              {fmtAgo(new Date(lastMeal.fedAt), now, lang, t('common.justNow'), t('common.ago'), t('common.h'), t('common.min'))}
+            </div>
+            <div className="sub">
+              {t(`food.${lastMeal.foodType}`)} · {lastMeal.amountGrams} g
+            </div>
+          </>
+        ) : (
+          <div className="sub">{t('home.noMealsYet')}</div>
+        )}
+      </div>
+
+      <div className="scene-card right">
+        <div className="label">{t('home.nextMeal')}</div>
+        {next.at ? (
+          <>
+            <div className={`value count ${next.overdue ? 'overdue' : ''}`}>
+              {next.overdue ? '−' : ''}
+              {fmtCountdown(Math.abs(next.at.getTime() - now.getTime()))}
+            </div>
+            <div className="sub">
+              {next.overdue ? t('home.overdue') : `${next.schedule?.name ?? ''} · ${fmtTime(next.at, timeFormat, lang)}`}
+            </div>
+          </>
+        ) : (
+          <div className="sub">{t('home.noSchedule')}</div>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <div className="page">
-      <div className="home-top">
+      <header className="home-head">
         <div>
-          <h1 className="pixel-title" style={{ fontSize: '1.5rem', margin: 0 }}>
-            {pet?.name ?? 'Frėja'}
-          </h1>
-          <span className="muted">{greeting}</span>
+          <h1 className="brand-name">{pet?.name ?? 'Frėja'}</h1>
+          <div className="brand-sub">{t('home.subtitle')}</div>
+          <div className="brand-tag">
+            {t('home.tagline')} <span style={{ color: 'var(--pink)' }}>♥</span>
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
           <span className="level-chip">
-            <PixelIcon name="star" size={14} />
+            <PixelIcon name="star" size={13} />
             {t('home.level')} {pet?.level ?? 1}
           </span>
-          <div className="xp-bar" aria-label={`XP ${pet?.currentXp ?? 0}`}>
+          <div
+            className="xp-bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(levelFraction({ level: pet?.level ?? 1, currentXp: pet?.currentXp ?? 0, lifetimeXp: 0 }) * 100)}
+            aria-label="XP"
+          >
             <div style={{ width: `${Math.round(levelFraction({ level: pet?.level ?? 1, currentXp: pet?.currentXp ?? 0, lifetimeXp: 0 }) * 100)}%` }} />
           </div>
-        </div>
-      </div>
-
-      <FrejaScene overdue={next.overdue} />
-
-      <div className="meal-status-grid">
-        <div className="panel" style={{ margin: 0 }}>
-          <div className="row" style={{ marginBottom: 4 }}>
-            <PixelIcon name="bowl" size={18} />
-            <strong className="small">{t('home.lastMeal')}</strong>
-          </div>
-          {lastMeal ? (
-            <>
-              <div style={{ fontWeight: 700 }}>
-                {fmtAgo(new Date(lastMeal.fedAt), now, lang, t('common.justNow'), t('common.ago'), t('common.h'), t('common.min'))}
-              </div>
-              <div className="muted">
-                {t(`food.${lastMeal.foodType}`)} · {lastMeal.amountGrams} g · {fmtTime(new Date(lastMeal.fedAt), timeFormat, lang)}
-              </div>
-            </>
-          ) : (
-            <div className="muted">{t('home.noMealsYet')}</div>
-          )}
-        </div>
-        <div className="panel" style={{ margin: 0 }}>
-          <div className="row" style={{ marginBottom: 4 }}>
-            <PixelIcon name="bell" size={18} />
-            <strong className="small">{t('home.nextMeal')}</strong>
-          </div>
-          {next.at ? (
-            <>
-              <div className={`countdown ${next.overdue ? 'overdue' : ''}`}>
-                {next.overdue ? '−' : ''}
-                {fmtCountdown(Math.abs(next.at.getTime() - now.getTime()))}
-              </div>
-              <div className="muted">
-                {next.overdue ? t('home.overdue') : `${next.schedule?.name ?? ''} · ${fmtTime(next.at, timeFormat, lang)}`}
-              </div>
-            </>
-          ) : (
-            <div className="muted">{t('home.noSchedule')}</div>
-          )}
-        </div>
-      </div>
-
-      <button className="btn btn-primary btn-wide" style={{ marginBottom: 8 }} onClick={quickFeed}>
-        <PixelIcon name="bowl" size={20} /> {t('home.fedButton')}
-      </button>
-      <button className="btn btn-ghost btn-wide btn-sm" style={{ marginBottom: 14 }} onClick={() => setSheetOpen(true)}>
-        {t('home.details')} ▾
-      </button>
-
-      <div className="panel panel-soft">
-        <div className="row-between" style={{ marginBottom: 8 }}>
-          <h3 style={{ margin: 0 }}>{t('home.quickCare')}</h3>
           {streak > 1 && (
             <span className="level-chip">
-              <PixelIcon name="star" size={12} /> {streak} {t('home.streak')}
+              <PixelIcon name="heart" size={12} /> {streak} {t('home.streak')}
             </span>
           )}
         </div>
-        <div className="quick-care-grid">
-          {enabledCare.map((task) => (
-            <button
-              key={task.id}
-              className={`care-chip ${doneToday(task.id) ? 'done-today' : ''}`}
-              onClick={async () => {
-                await logCare(task);
-                AudioManager.playPop();
-                pushToast({ text: t('care.doneToast'), kind: 'success' });
-              }}
-            >
-              <PixelIcon name={task.icon} size={22} />
-              <span>{lang === 'lt' ? task.nameLt : task.nameEn}</span>
-            </button>
+      </header>
+
+      <FrejaScene overdue={next.overdue} overlay={sceneCards} />
+
+      <div className="feed-row">
+        <button className="btn btn-primary" onClick={quickFeed}>
+          <PixelIcon name="bowl" size={20} /> {t('home.fedButton')}
+        </button>
+        <button className="btn" onClick={() => setSheetOpen(true)} aria-label={t('feed.title')}>
+          {t('home.details')} ▾
+        </button>
+      </div>
+
+      <div className="panel mood">
+        <PixelIcon name="heart" size={34} />
+        <div className="mood-text">
+          <div className="label">{t('home.mood')}</div>
+          <div className="value">{t(moodName)}</div>
+          <div className="sub">{t(`${moodName}Sub`)}</div>
+        </div>
+        <div className="mood-meter" role="img" aria-label={`${t('home.mood')}: ${mood.score}/5`}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <i key={n} className={n <= mood.score ? 'on' : ''} />
           ))}
         </div>
+      </div>
+
+      <div className="care-grid">
+        {enabledCare.map((task) => (
+          <button
+            key={task.id}
+            className={`care-tile ${doneToday(task.id) ? 'done' : ''}`}
+            onClick={async () => {
+              await logCare(task);
+              AudioManager.playPop();
+              pushToast({ text: t('care.doneToast'), kind: 'success' });
+            }}
+          >
+            <PixelIcon name={task.icon} size={26} />
+            <span className="name">{lang === 'lt' ? task.nameLt : task.nameEn}</span>
+            <span className="sub">{doneToday(task.id) ? t('care.done') : t('care.never')}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="secret">
+        <span className="mark">{allFound ? '★' : '?'}</span>
+        <div className="body">
+          <div className="title">{allFound ? t('home.secretDone') : t('home.secretTitle')}</div>
+          <div className="sub">{allFound ? t('home.secretDoneSub') : t('home.secretSub')}</div>
+          <div className="progress">
+            <div style={{ width: `${Math.round((collected / COLLECTIBLES.length) * 100)}%` }} />
+          </div>
+        </div>
+        <span className="muted small tnum">
+          {collected}/{COLLECTIBLES.length}
+        </span>
       </div>
 
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={t('feed.title')}>
         <div className="field">
           <label>{t('feed.foodType')}</label>
-          <div className="seg" role="radiogroup" aria-label={t('feed.foodType')} style={{ flexWrap: 'wrap', display: 'flex' }}>
+          <div className="seg" role="radiogroup" aria-label={t('feed.foodType')}>
             {FOOD_TYPES.map((ft) => (
               <button key={ft} className={foodType === ft ? 'on' : ''} role="radio" aria-checked={foodType === ft} onClick={() => setFoodType(ft)}>
                 {t(`food.${ft}`)}
@@ -187,7 +241,13 @@ export function HomePage() {
         </div>
         <div className="field">
           <label htmlFor="feed-time">{t('feed.time')}</label>
-          <input id="feed-time" type="datetime-local" value={customTime || toLocalInputValue(new Date())} max={toLocalInputValue(new Date())} onChange={(e) => setCustomTime(e.target.value)} />
+          <input
+            id="feed-time"
+            type="datetime-local"
+            value={customTime || toLocalInputValue(new Date())}
+            max={toLocalInputValue(new Date())}
+            onChange={(e) => setCustomTime(e.target.value)}
+          />
         </div>
         <div className="field">
           <label htmlFor="feed-note">{t('feed.note')}</label>

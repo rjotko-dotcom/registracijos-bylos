@@ -2,11 +2,12 @@
 // long-press purr / five-tap meow / double-tap), random idle events,
 // time-of-day tint and all in-room easter eggs.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { CatAnimator, type CatState } from '../cat/animation';
 import { GestureController, type GestureCallbacks } from '../cat/gestures';
 import { RandomEventScheduler, type RandomEventDef } from '../cat/randomEvents';
 import { SPRITES, ESSENTIAL_FRAMES, LAZY_FRAMES } from '../cat/sprites';
+import roomImg from '../assets/scene/room.png';
 import { AudioManager } from '../audio/AudioManager';
 import { HapticsManager } from '../haptics/HapticsManager';
 import { timeOfDay } from '../domain/timeOfDay';
@@ -24,13 +25,13 @@ interface FloatingHeart {
 let heartSeq = 1;
 
 const BALL_SPOTS = [
-  { left: '12%', bottom: '6%' },
-  { left: '30%', bottom: '4%' },
-  { left: '55%', bottom: '7%' },
-  { left: '20%', bottom: '12%' },
+  { left: '6%', bottom: '4%' },
+  { left: '18%', bottom: '2%' },
+  { left: '78%', bottom: '3%' },
+  { left: '66%', bottom: '1%' },
 ];
 
-export function FrejaScene({ overdue }: { overdue: boolean }) {
+export function FrejaScene({ overdue, overlay }: { overdue: boolean; overlay?: ReactNode }) {
   const { t } = useI18n();
   const now = useNow(30_000);
   const settings = useAppStore((s) => s.settings);
@@ -438,9 +439,11 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
   const spot = BALL_SPOTS[ballSpot];
 
   return (
-    <div className={`scene ${zooming ? 'zoomies-anim' : ''}`} ref={sceneRef}>
+    <div className="scene" ref={sceneRef}>
+      <img className="scene-room" src={roomImg} alt="" draggable={false} />
+
       <div
-        className={`press-scale ${pressed ? 'pressed' : ''}`}
+        className={`cat-wrap ${pressed ? 'pressed' : ''} ${zooming ? 'zoomies-anim' : ''}`}
         role="button"
         tabIndex={0}
         aria-label={`${t('appName')} — ${t('home.tapHint')}`}
@@ -483,12 +486,12 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
         ))}
 
       {catState === 'sleeping' && (
-        <span className="pixel-zzz overlay-sprite" style={{ left: '30%', top: '18%' }}>
+        <span className="pixel-zzz overlay-sprite" style={{ left: '30%', top: '30%' }}>
           z Z z
         </span>
       )}
 
-      {crown && <span className="overlay-sprite pixel-crown" style={{ left: '24%', top: '26%' }} />}
+      {crown && <span className="overlay-sprite pixel-crown" style={{ left: '26%', top: '34%' }} />}
 
       {hearts.map((h) => (
         <span key={h.id} className="overlay-sprite pixel-heart" style={{ left: `${h.x}%`, top: `${h.y}%` }} />
@@ -506,20 +509,20 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
       {/* Pink paw plush hotspot (the plush is part of the sprite art) */}
       <button
         type="button"
-        className="overlay-sprite"
-        style={{ right: '14%', bottom: '22%', width: '26%', height: '22%', background: 'transparent', border: 'none', cursor: 'pointer' }}
+        className="overlay-sprite hotspot"
+        style={{ right: '17%', bottom: '20%', width: '26%', height: '20%' }}
         aria-label="Pink paw toy"
         onPointerDown={onPawToyDown}
         onPointerUp={onPawToyUp}
         onPointerCancel={onPawToyUp}
       />
 
-      {/* Secret corner plant hotspot */}
+      {/* Secret houseplant in the corner of the room */}
       <button
         type="button"
-        className="overlay-sprite"
-        style={{ left: 0, top: 0, width: '14%', height: '16%', background: 'transparent', border: 'none' }}
-        aria-label="Room corner"
+        className="overlay-sprite hotspot"
+        style={{ left: '2%', top: '32%', width: '22%', height: '30%' }}
+        aria-label="Houseplant"
         onPointerDown={onPlantTap}
       />
 
@@ -547,7 +550,7 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
         <button
           type="button"
           className="overlay-sprite pixel-paw"
-          style={{ right: '6%', bottom: '8%', background: undefined, border: 'none' }}
+          style={{ right: '5%', top: '30%' }}
           aria-label="Hidden paw"
           onPointerDown={onHiddenPawTap}
         />
@@ -557,13 +560,20 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
         <button
           type="button"
           className="overlay-sprite pixel-box"
-          style={{ left: '4%', bottom: '4%' }}
+          style={{ left: '3%', bottom: '2%' }}
           aria-label="Cardboard box"
           onPointerDown={onBoxTap}
         />
       )}
 
-      {!firstInteractionDone && <div className="hint">{t('home.tapHint')} 🐾</div>}
+      {!firstInteractionDone && (
+        <div className="bubble">
+          {t('home.tapHint')}
+          <span className="sub">{t('home.tapHintSub')}</span>
+        </div>
+      )}
+
+      {overlay}
     </div>
   );
 }

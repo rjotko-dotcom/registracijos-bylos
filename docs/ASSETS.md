@@ -6,6 +6,38 @@ All Frėja animation frames live in `src/assets/freja/<state>/`. The central
 mapping is `src/cat/sprites.ts` — add or swap files there and nothing else
 needs to change.
 
+The frames are **generated**, not committed by hand: `npm run assets` reads
+the supplied photos listed in `scripts/generate-assets.mjs`, cuts the black
+vignette backdrop off each one (`scripts/cutout.mjs`), and pads every result
+onto one shared canvas so the bed never shifts between frames. Point
+`SOURCES` at new photos and re-run to refresh the art.
+
+### How the background removal works
+
+Frėja cannot be separated from the backdrop by brightness or hue alone —
+where her dark back meets it she is actually *darker* than the backdrop
+(rgb 11,9,8 vs 28,22,16), so a threshold or flood fill eats the cat. Two
+signals together do work:
+
+* **brightness** — the cream bed reads 215+, well clear of the backdrop
+  glow that tops out near 160
+* **local texture** — her fur has detail (std-dev ~15-19) while the
+  backdrop is a smooth gradient (~1-5), which finds the silhouette of her
+  back where brightness cannot
+
+The convex hull of those pixels is the subject outline; everything outside
+is cleared and a thin band just inside is faded so no straight hull edge
+shows against the pale room. Tuning constants sit at the top of
+`scripts/cutout.mjs`.
+
+## The room
+
+`src/assets/scene/room.png` is real pixel art, drawn in code by
+`scripts/room.mjs` at 120x138 and scaled up with nearest-neighbour so every
+pixel stays a hard square. Edit the drawing calls there — wall, window,
+shelf, plant, rug — and re-run `npm run assets`. Time of day is layered on
+at runtime as a CSS tint, so only one room image ships.
+
 Currently supplied frames (from the user's pixel-art set):
 
 | File | Source |

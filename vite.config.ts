@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.png', 'pwa/apple-touch-icon.png', 'audio/*.wav'],
+      includeAssets: ['favicon.png', 'pwa/apple-touch-icon.png'],
       manifest: {
         name: 'Frėja',
         short_name: 'Frėja',

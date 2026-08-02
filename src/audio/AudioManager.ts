@@ -1,16 +1,21 @@
 // AudioManager — HTMLAudioElement based, with purr fade in/out, meow
-// de-duplication and page-hide safety. Files live in /public/audio and can
-// be replaced with real recordings of Frėja (see docs/ASSETS.md).
+// de-duplication and page-hide safety. Files live in src/assets/audio and
+// can be replaced with real recordings of Frėja (see docs/ASSETS.md).
 
 import { AUDIO } from '../config/constants';
+import purrLoop from '../assets/audio/purr-loop.wav';
+import meow1 from '../assets/audio/meow-1.wav';
+import meow2 from '../assets/audio/meow-2.wav';
+import chirp from '../assets/audio/chirp.wav';
+import softPop from '../assets/audio/soft-pop.wav';
 
 export type SoundCategory = 'purr' | 'meow' | 'interaction' | 'reward';
 
 const FILES = {
-  purr: ['/audio/purr-loop.wav'],
-  meow: ['/audio/meow-1.wav', '/audio/meow-2.wav'],
-  chirp: ['/audio/chirp.wav'],
-  pop: ['/audio/soft-pop.wav'],
+  purr: [purrLoop],
+  meow: [meow1, meow2],
+  chirp: [chirp],
+  pop: [softPop],
 } as const;
 
 export interface SoundPrefs {

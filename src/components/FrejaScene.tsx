@@ -2,9 +2,9 @@
 // long-press purr / five-tap meow / double-tap), random idle events,
 // time-of-day tint and all in-room easter eggs.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CatAnimator, type CatState } from '../cat/animation';
-import { GestureController } from '../cat/gestures';
+import { GestureController, type GestureCallbacks } from '../cat/gestures';
 import { RandomEventScheduler, type RandomEventDef } from '../cat/randomEvents';
 import { SPRITES, ESSENTIAL_FRAMES, LAZY_FRAMES } from '../cat/sprites';
 import { AudioManager } from '../audio/AudioManager';
@@ -112,48 +112,62 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
   }, [firstInteractionDone, updateSettings]);
 
   // ---------- gestures on the cat ----------
-  const gestures = useMemo(
-    () =>
-      new GestureController({
-        onPressStart: () => {
-          markFirstInteraction();
-          if (anim.current === 'sleeping') {
-            anim.reset();
-            anim.request('waking');
-            return;
-          }
-          anim.request('pressed');
-          setPressed(true);
-        },
-        onPressEnd: () => {
-          setPressed(false);
-          anim.release('pressed');
-        },
-        onLongPressStart: () => {
-          anim.request('purring');
-          AudioManager.startPurr();
-          HapticsManager.startPurr();
-          spawnHeart(46 + Math.random() * 10, 36);
-          void awardXp('pet', { silent: true });
-        },
-        onLongPressEnd: () => {
-          AudioManager.stopPurr();
-          HapticsManager.stopPurr();
-          anim.release('purring');
-        },
-        onDoubleTap: () => {
-          spawnHeart(50, 42);
-          void awardXp('doubleTap', { silent: true });
-        },
-        onFiveTaps: () => {
-          anim.request('meowing');
-          AudioManager.playMeow();
-          HapticsManager.pulse();
-          spawnHeart(58, 34);
-        },
-      }),
-    [anim, awardXp, markFirstInteraction, spawnHeart],
-  );
+  // The controller must outlive every re-render: it holds the in-flight
+  // press and the long-press timer. Rebuilding it mid-gesture would strand
+  // the cat with her eyes closed, so the live callbacks go through a ref
+  // and the controller itself is created exactly once.
+  const handlersRef = useRef<GestureCallbacks>(null as unknown as GestureCallbacks);
+  handlersRef.current = {
+    onPressStart: () => {
+      markFirstInteraction();
+      if (anim.current === 'sleeping') {
+        anim.reset();
+        anim.request('waking');
+        return;
+      }
+      anim.request('pressed');
+      setPressed(true);
+    },
+    onPressEnd: () => {
+      setPressed(false);
+      anim.release('pressed');
+    },
+    onLongPressStart: () => {
+      anim.request('purring');
+      AudioManager.startPurr();
+      HapticsManager.startPurr();
+      spawnHeart(46 + Math.random() * 10, 36);
+      void awardXp('pet', { silent: true });
+    },
+    onLongPressEnd: () => {
+      AudioManager.stopPurr();
+      HapticsManager.stopPurr();
+      anim.release('purring');
+    },
+    onDoubleTap: () => {
+      spawnHeart(50, 42);
+      void awardXp('doubleTap', { silent: true });
+    },
+    onFiveTaps: () => {
+      anim.request('meowing');
+      AudioManager.playMeow();
+      HapticsManager.pulse();
+      spawnHeart(58, 34);
+    },
+  };
+
+  const gesturesRef = useRef<GestureController | null>(null);
+  if (!gesturesRef.current) {
+    gesturesRef.current = new GestureController({
+      onPressStart: () => handlersRef.current.onPressStart(),
+      onPressEnd: () => handlersRef.current.onPressEnd(),
+      onLongPressStart: () => handlersRef.current.onLongPressStart(),
+      onLongPressEnd: () => handlersRef.current.onLongPressEnd(),
+      onDoubleTap: () => handlersRef.current.onDoubleTap(),
+      onFiveTaps: () => handlersRef.current.onFiveTaps(),
+    });
+  }
+  const gestures = gesturesRef.current;
 
   useEffect(() => () => gestures.destroy(), [gestures]);
 
@@ -431,7 +445,14 @@ export function FrejaScene({ overdue }: { overdue: boolean }) {
         tabIndex={0}
         aria-label={`${t('appName')} — ${t('home.tapHint')}`}
         onPointerDown={(e) => {
-          (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+          // Capture keeps the release event ours even if the finger slides
+          // off the sprite. It throws on some browsers when the pointer is
+          // already gone, and must never block the gesture itself.
+          try {
+            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+          } catch {
+            /* capture unavailable — pointercancel still resets the state */
+          }
           gestures.pointerDown();
         }}
         onPointerUp={() => gestures.pointerUp()}

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = resolve(root, 'src/assets/freja/idle/freja-idle-01.png');
 const PWA = resolve(root, 'public/pwa');
-const AUDIO = resolve(root, 'public/audio');
+const AUDIO = resolve(root, 'src/assets/audio');
 mkdirSync(PWA, { recursive: true });
 mkdirSync(AUDIO, { recursive: true });
 

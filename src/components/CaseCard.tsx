@@ -8,7 +8,7 @@ interface CaseCardProps {
   expanded: boolean
   onToggleExpand: (id: string) => void
   onToggleTechSheet: (id: string) => void
-  onToggleRegitra: (id: string) => void
+  onAdvanceStage: (id: string) => void
   onRequestComplete: (id: string) => void
   onSaveNotes: (id: string, notes: string) => void
   onEdit: (id: string) => void
@@ -28,7 +28,7 @@ export function CaseCard({
   expanded,
   onToggleExpand,
   onToggleTechSheet,
-  onToggleRegitra,
+  onAdvanceStage,
   onRequestComplete,
   onSaveNotes,
   onEdit,
@@ -43,13 +43,21 @@ export function CaseCard({
 
   // days the documents have been sitting at Regitra — flag stale cases
   const regitraDays =
-    item.regitraDone && !item.completed && item.regitraAt
+    item.stage === 'regitra' && !item.completed && item.regitraAt
       ? Math.floor((Date.now() - item.regitraAt) / DAY)
       : 0
 
   // days the case has been sitting with the registrar, not yet driven anywhere
   const withMeDays =
-    !item.completed && !item.regitraDone ? Math.floor((Date.now() - Date.parse(item.date)) / DAY) : 0
+    !item.completed && item.stage === 'take'
+      ? Math.floor((Date.now() - Date.parse(item.date)) / DAY)
+      : 0
+
+  // days the finished documents have been waiting to be collected
+  const pickupDays =
+    item.stage === 'pickup' && !item.completed && item.pickupAt
+      ? Math.floor((Date.now() - item.pickupAt) / DAY)
+      : 0
 
   // days until the Regitra reservation (0 = today, negative = passed)
   const resDiff =
@@ -84,6 +92,8 @@ export function CaseCard({
   const holdTimer = useRef<number | undefined>(undefined)
   const longPress = useRef({ timer: undefined as number | undefined, fired: false, x: 0, y: 0 })
   const swipeEnabled = !item.completed && !expanded
+  // right-swipe walks the case forward: with me → at Regitra → ready to collect
+  const canAdvance = item.caseType === 'registracija' && item.stage !== 'pickup'
 
   const clearLongPress = () => {
     window.clearTimeout(longPress.current.timer)
@@ -195,9 +205,9 @@ export function CaseCard({
     if (!s.active) return
     if (s.horizontal && !s.fired) {
       const dx = e.clientX - s.startX
-      if (dx >= SWIPE_TRIGGER && s.armed && item.caseType === 'registracija') {
+      if (dx >= SWIPE_TRIGGER && s.armed && canAdvance) {
         s.fired = true
-        onToggleRegitra(item.id)
+        onAdvanceStage(item.id)
       } else if (dx <= -SWIPE_TRIGGER) {
         s.fired = true
         onRequestComplete(item.id)
@@ -216,13 +226,13 @@ export function CaseCard({
     <article className={`case-card${item.completed ? ' is-completed' : ''}`} data-flip-id={item.id}>
       <div className="row-zone">
       <div className="swipe-layer" aria-hidden="true">
-        {item.caseType === 'registracija' && (
+        {canAdvance && (
           <span
             className={`swipe-hint left${swipedRight ? ' visible' : ''}${
               holdArmed ? ' armed' : offset >= SWIPE_TRIGGER ? ' waiting' : ''
             }`}
           >
-            <Icon name="landmark" size={20} />
+            <Icon name={item.stage === 'take' ? 'landmark' : 'inbox'} size={20} />
           </span>
         )}
         <span className={`swipe-hint right${swipedLeft ? ' visible' : ''}${offset <= -SWIPE_TRIGGER ? ' armed' : ''}`}>
@@ -308,6 +318,12 @@ export function CaseCard({
               Pas tave {withMeDays} d.
             </div>
           )}
+          {pickupDays >= 1 && (
+            <div className={`case-age${pickupDays >= 3 ? ' late' : ''}`}>
+              <Icon name="clock" size={12} strokeWidth={2.2} />
+              Laukia {pickupDays} d.
+            </div>
+          )}
         </div>
 
         {item.caseType === 'registracija' && (
@@ -338,11 +354,19 @@ export function CaseCard({
 
         {item.caseType === 'registracija' && (
           <span
-            className={`regitra-status${item.regitraDone ? ' active' : ''}`}
+            className={`regitra-status${item.stage === 'regitra' ? ' active' : ''}${
+              item.stage === 'pickup' ? ' pickup' : ''
+            }`}
             role="img"
-            aria-label={item.regitraDone ? 'Palikta Regitroje' : 'Nepalikta Regitroje'}
+            aria-label={
+              item.stage === 'regitra'
+                ? 'Palikta Regitroje'
+                : item.stage === 'pickup'
+                  ? 'Paruošta — paimti iš Regitros'
+                  : 'Nepalikta Regitroje'
+            }
           >
-            <Icon name="landmark" size={21} />
+            <Icon name={item.stage === 'pickup' ? 'inbox' : 'landmark'} size={21} />
           </span>
         )}
       </div>

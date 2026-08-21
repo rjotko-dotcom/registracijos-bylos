@@ -156,18 +156,24 @@ textarea {
 }
 
 .header-counts {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-size: 16.5px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-2);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.hc-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .header-counts strong {
   display: inline-block;
-  color: var(--text);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   animation: count-pop 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
@@ -185,6 +191,10 @@ textarea {
 
 .header-counts .c-reg {
   color: var(--accent-2);
+}
+
+.header-counts .c-pickup {
+  color: var(--warn);
 }
 
 .header-title {
@@ -263,7 +273,8 @@ textarea {
 }
 
 .list-caption.cap-take::before,
-.list-caption.cap-reg::before {
+.list-caption.cap-reg::before,
+.list-caption.cap-pickup::before {
   content: '';
   display: inline-block;
   width: 7px;
@@ -279,6 +290,10 @@ textarea {
 
 .list-caption.cap-reg::before {
   background: var(--accent-2);
+}
+
+.list-caption.cap-pickup::before {
+  background: var(--warn);
 }
 
 .list-caption-row {
@@ -738,6 +753,11 @@ textarea {
 
 .regitra-status.active {
   color: var(--ok);
+  opacity: 1;
+}
+
+.regitra-status.pickup {
+  color: var(--warn);
   opacity: 1;
 }
 

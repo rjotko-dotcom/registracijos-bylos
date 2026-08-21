@@ -208,11 +208,15 @@ export default function App() {
   }, [searchOpen])
 
   const toTakeCount = useMemo(
-    () => cases.filter((it) => !it.completed && !it.regitraDone).length,
+    () => cases.filter((it) => !it.completed && it.stage === 'take').length,
     [cases],
   )
   const atRegitraCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.regitraDone).length,
+    () => cases.filter((it) => !it.completed && it.stage === 'regitra').length,
+    [cases],
+  )
+  const toPickupCount = useMemo(
+    () => cases.filter((it) => !it.completed && it.stage === 'pickup').length,
     [cases],
   )
 
@@ -280,14 +284,19 @@ export default function App() {
           : it,
       ),
     )
-  const handleToggleRegitra = (id: string) =>
-    setCases((prev) =>
-      prev.map((it) =>
-        it.id === id
-          ? { ...it, regitraDone: !it.regitraDone, regitraAt: it.regitraDone ? null : Date.now() }
-          : it,
-      ),
-    )
+  // a held right-swipe walks the case one step forward through the workflow
+  const handleAdvanceStage = (id: string) => {
+    const item = cases.find((it) => it.id === id)
+    if (!item || item.stage === 'pickup') return
+    const before = { stage: item.stage, regitraAt: item.regitraAt, pickupAt: item.pickupAt }
+    if (item.stage === 'take') {
+      update(id, { stage: 'regitra', regitraAt: Date.now() })
+      showUndo('Perkelta į „Regitroje"', () => update(id, before))
+    } else {
+      update(id, { stage: 'pickup', pickupAt: Date.now() })
+      showUndo('Perkelta į „Paimti iš Regitros"', () => update(id, before))
+    }
+  }
 
   const handleRequestComplete = (id: string) => {
     const item = cases.find((it) => it.id === id)
@@ -381,8 +390,17 @@ export default function App() {
     const now = Date.now()
     if (editingId) {
       const prev = cases.find((it) => it.id === editingId)
-      const regitraAt = draft.regitraDone ? (prev?.regitraDone ? (prev.regitraAt ?? now) : now) : null
-      update(editingId, { ...draft, regitraAt })
+      // keep the original timestamps when a stage is unchanged, stamp fresh ones
+      // when the case moves forward, clear them when it moves back
+      const reached = (s: 'regitra' | 'pickup') =>
+        s === 'regitra' ? draft.stage !== 'take' : draft.stage === 'pickup'
+      const wasReached = (s: 'regitra' | 'pickup') =>
+        !prev ? false : s === 'regitra' ? prev.stage !== 'take' : prev.stage === 'pickup'
+      update(editingId, {
+        ...draft,
+        regitraAt: reached('regitra') ? (wasReached('regitra') ? (prev?.regitraAt ?? now) : now) : null,
+        pickupAt: reached('pickup') ? (wasReached('pickup') ? (prev?.pickupAt ?? now) : now) : null,
+      })
     } else {
       setCases((prev) => [
         {
@@ -390,7 +408,8 @@ export default function App() {
           id: `c${now.toString(36)}`,
           createdAt: now,
           completedAt: null,
-          regitraAt: draft.regitraDone ? now : null,
+          regitraAt: draft.stage === 'take' ? null : now,
+          pickupAt: draft.stage === 'pickup' ? now : null,
         },
         ...prev,
       ])
@@ -404,18 +423,18 @@ export default function App() {
     noticeTimer.current = window.setTimeout(() => setNotice(''), 2500)
   }
 
-  // copy the at-Regitra list grouped by manager — ready to paste into a chat
-  const handleCopyList = async () => {
-    const atRegitra = cases.filter((it) => !it.completed && it.regitraDone)
-    if (atRegitra.length === 0) return
+  // copy one stage's list grouped by manager — ready to paste into a chat
+  const handleCopyList = async (stage: 'regitra' | 'pickup' = 'regitra') => {
+    const list = cases.filter((it) => !it.completed && it.stage === stage)
+    if (list.length === 0) return
     const byManager = new Map<string, string[]>()
-    atRegitra.forEach((it) => {
+    list.forEach((it) => {
       const entry = `${it.model} (${it.regNumber || it.vin || '—'})`
       byManager.set(it.manager, [...(byManager.get(it.manager) ?? []), entry])
     })
     const stamp = new Date().toISOString().slice(0, 10)
     const text =
-      `Regitroje (${stamp}):\n` +
+      `${stage === 'regitra' ? 'Regitroje' : 'Paimti iš Regitros'} (${stamp}):\n` +
       [...byManager.entries()].map(([m, list]) => `${m}: ${list.join(', ')}`).join('\n')
     try {
       await navigator.clipboard.writeText(text)
@@ -628,15 +647,22 @@ export default function App() {
             {view === 'active' ? (
               <div className="header-summary">
                 <span className="header-date">{todayLabel}</span>
-                <span className="header-counts">
-                  Vežti{' '}
-                  <strong key={`t${toTakeCount}`} className="c-take">
-                    {toTakeCount}
-                  </strong>{' '}
-                  <span className="dot">·</span> Regitroje{' '}
-                  <strong key={`r${atRegitraCount}`} className="c-reg">
-                    {atRegitraCount}
-                  </strong>
+                <span
+                  className="header-counts"
+                  aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}`}
+                >
+                  <span className="hc-item c-take">
+                    <Icon name="car" size={15} strokeWidth={2.1} />
+                    <strong key={`t${toTakeCount}`}>{toTakeCount}</strong>
+                  </span>
+                  <span className="hc-item c-reg">
+                    <Icon name="landmark" size={14} strokeWidth={2.1} />
+                    <strong key={`r${atRegitraCount}`}>{atRegitraCount}</strong>
+                  </span>
+                  <span className="hc-item c-pickup">
+                    <Icon name="inbox" size={15} strokeWidth={2.1} />
+                    <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
+                  </span>
                 </span>
               </div>
             ) : (
@@ -708,7 +734,7 @@ export default function App() {
             expanded={expandedId === item.id}
             onToggleExpand={handleToggleExpand}
             onToggleTechSheet={handleToggleTechSheet}
-            onToggleRegitra={handleToggleRegitra}
+            onAdvanceStage={handleAdvanceStage}
             onRequestComplete={handleRequestComplete}
             onSaveNotes={(id, notes) => update(id, { notes })}
             onEdit={handleEdit}
@@ -768,8 +794,9 @@ export default function App() {
           )
         }
 
-        const toTake = visible.filter((it) => !it.regitraDone)
-        const atRegitra = visible.filter((it) => it.regitraDone)
+        const toTake = visible.filter((it) => it.stage === 'take')
+        const atRegitra = visible.filter((it) => it.stage === 'regitra')
+        const toPickup = visible.filter((it) => it.stage === 'pickup')
         const managers = [...new Set(atRegitra.map((it) => it.manager))].sort((a, b) =>
           a.localeCompare(b, 'lt'),
         )
@@ -807,7 +834,7 @@ export default function App() {
                         type="button"
                         className="group-toggle"
                         aria-label="Kopijuoti sąrašą"
-                        onClick={handleCopyList}
+                        onClick={() => handleCopyList('regitra')}
                       >
                         <Icon name="copy" size={15} />
                       </button>
@@ -837,6 +864,23 @@ export default function App() {
                 ) : (
                   <main className="case-list">{atRegitra.map(renderCard)}</main>
                 )}
+
+                <div className="list-caption-row">
+                  <p className="list-caption cap-pickup">Paimti iš Regitros · {toPickup.length}</p>
+                  {toPickup.length > 0 && (
+                    <div className="caption-actions">
+                      <button
+                        type="button"
+                        className="group-toggle"
+                        aria-label="Kopijuoti paėmimo sąrašą"
+                        onClick={() => handleCopyList('pickup')}
+                      >
+                        <Icon name="copy" size={15} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <main className="case-list">{toPickup.map(renderCard)}</main>
               </>
             )}
           </>

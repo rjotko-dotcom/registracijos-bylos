@@ -8,6 +8,7 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
   const out = { ...it } as unknown as RegistrationCase & {
     techSheetOk?: boolean
     techSheetNeeded?: boolean
+    regitraDone?: boolean
   }
   if ('techSheetOk' in out) {
     out.techSheetNeeded = !out.techSheetOk
@@ -25,6 +26,10 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
   if (out.regitraAt === undefined) {
     out.regitraAt = out.regitraDone ? Date.now() : null
   }
+  // the old boolean "at Regitra" flag became a three-step stage
+  if (!out.stage) out.stage = out.regitraDone ? 'regitra' : 'take'
+  delete out.regitraDone
+  if (out.pickupAt === undefined) out.pickupAt = out.stage === 'pickup' ? Date.now() : null
   if (typeof out.reservedAt !== 'string') out.reservedAt = ''
   if (!Array.isArray(out.fleetVehicles)) {
     out.fleetVehicles = out.fleet ? [{ model: out.model, count: out.vehicleCount || 1 }] : []

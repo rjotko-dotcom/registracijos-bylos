@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import type { CaseDraft, CaseType, FleetVehicle, RegistrationCase, Salon, TechSheet } from '../types'
+import type {
+  CaseDraft,
+  CaseType,
+  FleetVehicle,
+  RegistrationCase,
+  Salon,
+  Stage,
+  TechSheet,
+} from '../types'
 import { Icon } from './Icon'
 import { useScrolled } from '../useScrolled'
 
@@ -66,7 +74,7 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
   )
   const [caseType, setCaseType] = useState<CaseType>(initial?.caseType ?? 'registracija')
   const [techSheet, setTechSheet] = useState<TechSheet>(initial?.techSheet ?? 'none')
-  const [regitraDone, setRegitraDone] = useState(initial?.regitraDone ?? false)
+  const [stage, setStage] = useState<Stage>(initial?.stage ?? 'take')
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
   const scrolled = useScrolled()
@@ -102,7 +110,7 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
       fleetVehicles: fleet ? cleanVehicles : [],
       caseType,
       techSheet: caseType === 'registracija' ? techSheet : 'none',
-      regitraDone: caseType === 'registracija' ? regitraDone : false,
+      stage: caseType === 'registracija' ? stage : 'take',
       notes: notes.trim(),
       completed: initial?.completed ?? false,
     })
@@ -383,17 +391,26 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
         )}
 
         {caseType === 'registracija' && (
-        <div className="toggle-row">
-          <span className="field-label">Atiduota Regitrai</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={regitraDone}
-            className={`switch${regitraDone ? ' on' : ''}`}
-            onClick={() => setRegitraDone(!regitraDone)}
-          >
-            <span className="knob" />
-          </button>
+        <div className="field">
+          <span className="field-label">Būsena</span>
+          <div className="segmented" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {(
+              [
+                ['take', 'Vežti'],
+                ['regitra', 'Regitroje'],
+                ['pickup', 'Paimti'],
+              ] as [Stage, string][]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={stage === value ? `active${value === 'pickup' ? ' warn' : ''}` : ''}
+                onClick={() => setStage(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         )}
 

@@ -4,9 +4,11 @@ import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
 import { ConfirmDialog } from './components/ConfirmDialog'
+import { BulkCompleteDialog } from './components/BulkCompleteDialog'
 import { NotesScreen, type RoutineItem, type TodoItem } from './components/NotesScreen'
 import { Icon } from './components/Icon'
 import { useScrolled } from './useScrolled'
+import { daysUntil } from './dates'
 
 type View = 'active' | 'archive' | 'notes'
 
@@ -61,6 +63,14 @@ function vehiclesOf(it: RegistrationCase): number {
   return it.fleet ? Math.max(1, it.vehicleCount) : 1
 }
 
+// reservations are hard deadlines, so cases still waiting to be driven are
+// ordered by urgency first: 0 = due today or overdue, 1 = tomorrow, 2 = the rest
+function reservationRank(it: RegistrationCase): number {
+  if (!it.reservedAt) return 2
+  const diff = daysUntil(it.reservedAt)
+  return diff <= 0 ? 0 : diff === 1 ? 1 : 2
+}
+
 // the workflow is a loop, not a dead end: past "paimti" a case comes back round
 // to "vežti", so a mis-swipe can be walked off instead of edited away
 const STAGE_FLOW: Record<Stage, { next: Stage; label: string }> = {
@@ -96,6 +106,7 @@ export default function App() {
   const [undo, setUndo] = useState<{ label: string; action: () => void } | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<RegistrationCase[] | null>(null)
+  const [bulkOpen, setBulkOpen] = useState(false)
   const [dataMsg, setDataMsg] = useState('')
   const [notice, setNotice] = useState('')
   const [todos, setTodos] = useState<TodoItem[]>(() => {
@@ -223,9 +234,15 @@ export default function App() {
     () => cases.filter((it) => !it.completed && it.stage === 'regitra').length,
     [cases],
   )
-  const toPickupCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.stage === 'pickup').length,
+  const pickupCases = useMemo(
+    () => cases.filter((it) => !it.completed && it.stage === 'pickup'),
     [cases],
+  )
+  const toPickupCount = pickupCases.length
+  // cases that must reach Regitra today (or should already have)
+  const dueTodayCount = useMemo(
+    () => cases.filter((it) => !it.completed && it.stage === 'take' && reservationRank(it) === 0).length,
+    [cases, today],
   )
 
   // most-used manager names power the quick-pick chips in the form
@@ -322,21 +339,25 @@ export default function App() {
 
   // fade the card out before removing it from the list — the FLIP hook then
   // glides the remaining cards into place
-  const animateOut = (id: string, after: () => void) => {
-    const el = document.querySelector<HTMLElement>(`[data-flip-id="${id}"]`)
+  const animateOut = (ids: string | string[], after: () => void) => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!el || reduce) {
+    const els = (Array.isArray(ids) ? ids : [ids])
+      .map((id) => document.querySelector<HTMLElement>(`[data-flip-id="${id}"]`))
+      .filter((el): el is HTMLElement => el !== null)
+    if (els.length === 0 || reduce) {
       after()
       return
     }
-    el.style.pointerEvents = 'none'
-    el.animate(
-      [
-        { opacity: 1, transform: 'scale(1)' },
-        { opacity: 0, transform: 'scale(0.94)' },
-      ],
-      { duration: 200, easing: 'ease-in', fill: 'forwards' },
-    )
+    els.forEach((el) => {
+      el.style.pointerEvents = 'none'
+      el.animate(
+        [
+          { opacity: 1, transform: 'scale(1)' },
+          { opacity: 0, transform: 'scale(0.94)' },
+        ],
+        { duration: 200, easing: 'ease-in', fill: 'forwards' },
+      )
+    })
     window.setTimeout(after, 185)
   }
 
@@ -357,6 +378,25 @@ export default function App() {
       })
     }
     setConfirmId(null)
+  }
+
+  // one trip to Regitra closes several cases at once
+  const handleBulkComplete = (ids: string[]) => {
+    setBulkOpen(false)
+    if (ids.length === 0) return
+    navigator.vibrate?.(30)
+    setExpandedId(null)
+    animateOut(ids, () => {
+      const now = Date.now()
+      const mark = (completed: boolean) =>
+        setCases((prev) =>
+          prev.map((it) =>
+            ids.includes(it.id) ? { ...it, completed, completedAt: completed ? now : null } : it,
+          ),
+        )
+      mark(true)
+      showUndo(`Archyvuota: ${ids.length} ${bylosWord(ids.length)}`, () => mark(false))
+    })
   }
 
   const handleConfirmDelete = () => {
@@ -527,6 +567,7 @@ export default function App() {
     (confirmId ? 1 : 0) +
     (deleteId ? 1 : 0) +
     (pendingImport ? 1 : 0) +
+    (bulkOpen ? 1 : 0) +
     (searchOpen ? 1 : 0) +
     (view !== 'active' ? 1 : 0)
   const layerDepthRef = useRef(0)
@@ -542,6 +583,8 @@ export default function App() {
       setConfirmId(null)
     } else if (pendingImport) {
       setPendingImport(null)
+    } else if (bulkOpen) {
+      setBulkOpen(false)
     } else if (searchOpen) {
       closeSearch()
     } else if (view !== 'active') {
@@ -657,7 +700,9 @@ export default function App() {
                 <span className="header-date">{todayLabel}</span>
                 <span
                   className="header-counts"
-                  aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}`}
+                  aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}${
+                    dueTodayCount > 0 ? `, šiandien atiduoti ${dueTodayCount}` : ''
+                  }`}
                 >
                   <span className="hc-item c-take">
                     <Icon name="car" size={15} strokeWidth={2.1} />
@@ -671,6 +716,12 @@ export default function App() {
                     <Icon name="inbox" size={15} strokeWidth={2.1} />
                     <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
                   </span>
+                  {dueTodayCount > 0 && (
+                    <span className="hc-item c-due">
+                      <Icon name="calendar" size={14} strokeWidth={2.1} />
+                      <strong key={`d${dueTodayCount}`}>{dueTodayCount}</strong>
+                    </span>
+                  )}
                 </span>
               </div>
             ) : (
@@ -802,7 +853,10 @@ export default function App() {
           )
         }
 
-        const toTake = visible.filter((it) => it.stage === 'take')
+        // sort is stable, so within the same urgency the FIFO order survives
+        const toTake = visible
+          .filter((it) => it.stage === 'take')
+          .sort((a, b) => reservationRank(a) - reservationRank(b))
         const atRegitra = visible.filter((it) => it.stage === 'regitra')
         const toPickup = visible.filter((it) => it.stage === 'pickup')
         const managers = [...new Set(atRegitra.map((it) => it.manager))].sort((a, b) =>
@@ -885,6 +939,14 @@ export default function App() {
                       >
                         <Icon name="copy" size={15} />
                       </button>
+                      <button
+                        type="button"
+                        className="group-toggle ok"
+                        aria-label="Užbaigti paimtas bylas"
+                        onClick={() => setBulkOpen(true)}
+                      >
+                        <Icon name="check" size={16} strokeWidth={2.6} />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -916,6 +978,14 @@ export default function App() {
           danger
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteId(null)}
+        />
+      )}
+
+      {bulkOpen && pickupCases.length > 0 && (
+        <BulkCompleteDialog
+          items={pickupCases}
+          onConfirm={handleBulkComplete}
+          onCancel={() => setBulkOpen(false)}
         />
       )}
 

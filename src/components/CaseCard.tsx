@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RegistrationCase } from '../types'
+import { daysUntil } from '../dates'
 import { BrandLogo } from './BrandLogo'
 import { Icon } from './Icon'
 
@@ -60,12 +61,7 @@ export function CaseCard({
       : 0
 
   // days until the Regitra reservation (0 = today, negative = passed)
-  const resDiff =
-    item.reservedAt && !item.completed
-      ? Math.round(
-          (new Date(item.reservedAt).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / DAY,
-        )
-      : null
+  const resDiff = item.reservedAt && !item.completed ? daysUntil(item.reservedAt) : null
 
   const copyValue = async (field: string, value: string) => {
     if (!value) return

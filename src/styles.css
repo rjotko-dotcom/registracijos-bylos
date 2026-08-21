@@ -197,6 +197,10 @@ textarea {
   color: var(--warn);
 }
 
+.header-counts .c-due {
+  color: var(--bad);
+}
+
 .header-title {
   font-size: 22px;
   font-weight: 700;
@@ -270,6 +274,10 @@ textarea {
 .case-list + .list-caption,
 .case-list + .list-caption-row {
   margin-top: 20px;
+}
+
+.group-toggle.ok {
+  color: var(--ok);
 }
 
 .list-caption.cap-take::before,
@@ -1332,6 +1340,88 @@ textarea {
   min-width: 0;
 }
 
+/* ---------- Bulk complete sheet ---------- */
+
+.bulk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 46vh;
+  overflow-y: auto;
+  margin: 4px 0 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bulk-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 52px;
+  padding: 7px 12px;
+  text-align: left;
+  background: var(--surface-2);
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+  border: 1px solid transparent;
+  border-radius: var(--r-ctl);
+  transition:
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.bulk-item:not(.on) {
+  opacity: 0.5;
+}
+
+.bulk-item.on {
+  border-color: var(--ok-line);
+}
+
+.bulk-check {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 2px solid var(--line-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-ok);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.bulk-item.on .bulk-check {
+  background: var(--ok);
+  background-image: linear-gradient(var(--ok), var(--ok));
+  border-color: var(--ok);
+}
+
+.bulk-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bulk-model {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bulk-sub {
+  font-size: 12.5px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .form-error {
   color: var(--bad);
   font-size: 14px;
@@ -1790,7 +1880,8 @@ body {
 
 .swipe-hint.armed,
 .btn-success,
-.todo-item.done .todo-check {
+.todo-item.done .todo-check,
+.bulk-item.on .bulk-check {
   box-shadow: inset 0 0 0 99px var(--ok);
 }
 

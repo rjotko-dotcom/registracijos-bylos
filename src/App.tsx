@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { CaseDraft, RegistrationCase } from './types'
+import type { CaseDraft, RegistrationCase, Stage } from './types'
 import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
@@ -59,6 +59,14 @@ function autoWord(n: number): string {
 // a fleet case counts as all its vehicles, a plain case as one
 function vehiclesOf(it: RegistrationCase): number {
   return it.fleet ? Math.max(1, it.vehicleCount) : 1
+}
+
+// the workflow is a loop, not a dead end: past "paimti" a case comes back round
+// to "vežti", so a mis-swipe can be walked off instead of edited away
+const STAGE_FLOW: Record<Stage, { next: Stage; label: string }> = {
+  take: { next: 'regitra', label: 'Perkelta į „Regitroje"' },
+  regitra: { next: 'pickup', label: 'Perkelta į „Paimti iš Regitros"' },
+  pickup: { next: 'take', label: 'Grąžinta į „Vežti"' },
 }
 
 function matchesQuery(item: RegistrationCase, query: string): boolean {
@@ -284,18 +292,22 @@ export default function App() {
           : it,
       ),
     )
-  // a held right-swipe walks the case one step forward through the workflow
+  // a held right-swipe walks the case one step around the workflow loop, so an
+  // accidental step can be corrected with the same gesture that caused it
   const handleAdvanceStage = (id: string) => {
     const item = cases.find((it) => it.id === id)
-    if (!item || item.stage === 'pickup') return
+    if (!item) return
+    const { next, label } = STAGE_FLOW[item.stage]
     const before = { stage: item.stage, regitraAt: item.regitraAt, pickupAt: item.pickupAt }
-    if (item.stage === 'take') {
-      update(id, { stage: 'regitra', regitraAt: Date.now() })
-      showUndo('Perkelta į „Regitroje"', () => update(id, before))
-    } else {
-      update(id, { stage: 'pickup', pickupAt: Date.now() })
-      showUndo('Perkelta į „Paimti iš Regitros"', () => update(id, before))
-    }
+    const now = Date.now()
+    update(id, {
+      stage: next,
+      // stamps are set the first time a case reaches a stage and kept afterwards,
+      // so looping back around does not wipe how long it really sat there
+      regitraAt: item.regitraAt ?? (next !== 'take' ? now : null),
+      pickupAt: item.pickupAt ?? (next === 'pickup' ? now : null),
+    })
+    showUndo(label, () => update(id, before))
   }
 
   const handleRequestComplete = (id: string) => {
@@ -390,16 +402,12 @@ export default function App() {
     const now = Date.now()
     if (editingId) {
       const prev = cases.find((it) => it.id === editingId)
-      // keep the original timestamps when a stage is unchanged, stamp fresh ones
-      // when the case moves forward, clear them when it moves back
-      const reached = (s: 'regitra' | 'pickup') =>
-        s === 'regitra' ? draft.stage !== 'take' : draft.stage === 'pickup'
-      const wasReached = (s: 'regitra' | 'pickup') =>
-        !prev ? false : s === 'regitra' ? prev.stage !== 'take' : prev.stage === 'pickup'
+      // same sticky rule as the swipe: stamp a stage the first time it is reached,
+      // then leave it alone however the case moves afterwards
       update(editingId, {
         ...draft,
-        regitraAt: reached('regitra') ? (wasReached('regitra') ? (prev?.regitraAt ?? now) : now) : null,
-        pickupAt: reached('pickup') ? (wasReached('pickup') ? (prev?.pickupAt ?? now) : now) : null,
+        regitraAt: prev?.regitraAt ?? (draft.stage !== 'take' ? now : null),
+        pickupAt: prev?.pickupAt ?? (draft.stage === 'pickup' ? now : null),
       })
     } else {
       setCases((prev) => [

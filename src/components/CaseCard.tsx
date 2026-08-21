@@ -92,8 +92,9 @@ export function CaseCard({
   const holdTimer = useRef<number | undefined>(undefined)
   const longPress = useRef({ timer: undefined as number | undefined, fired: false, x: 0, y: 0 })
   const swipeEnabled = !item.completed && !expanded
-  // right-swipe walks the case forward: with me → at Regitra → ready to collect
-  const canAdvance = item.caseType === 'registracija' && item.stage !== 'pickup'
+  // right-swipe walks the case around the loop: with me → at Regitra → ready to
+  // collect → back to me, so an accidental step can simply be walked off
+  const canAdvance = item.caseType === 'registracija'
 
   const clearLongPress = () => {
     window.clearTimeout(longPress.current.timer)
@@ -232,7 +233,10 @@ export function CaseCard({
               holdArmed ? ' armed' : offset >= SWIPE_TRIGGER ? ' waiting' : ''
             }`}
           >
-            <Icon name={item.stage === 'take' ? 'landmark' : 'inbox'} size={20} />
+            <Icon
+              name={item.stage === 'take' ? 'landmark' : item.stage === 'regitra' ? 'inbox' : 'car'}
+              size={20}
+            />
           </span>
         )}
         <span className={`swipe-hint right${swipedLeft ? ' visible' : ''}${offset <= -SWIPE_TRIGGER ? ' armed' : ''}`}>

@@ -227,7 +227,11 @@ export default function App() {
   }, [searchOpen])
 
   const toTakeCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.stage === 'take' && it.caseType !== 'tapatybe').length,
+    () => cases.filter((it) => !it.completed && it.stage === 'take' && it.caseType === 'registracija').length,
+    [cases],
+  )
+  const inspectionCount = useMemo(
+    () => cases.filter((it) => !it.completed && it.caseType === 'apziura').length,
     [cases],
   )
   const identityCount = useMemo(
@@ -718,6 +722,8 @@ export default function App() {
                 <span
                   className="header-counts"
                   aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}${
+                    inspectionCount > 0 ? `, apžiūra ${inspectionCount}` : ''
+                  }${
                     identityCount > 0 ? `, tapatybė ${identityCount}` : ''
                   }${
                     dueTodayCount > 0 ? `, šiandien atiduoti ${dueTodayCount}` : ''
@@ -735,6 +741,12 @@ export default function App() {
                     <Icon name="inbox" size={15} strokeWidth={2.1} />
                     <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
                   </span>
+                  {inspectionCount > 0 && (
+                    <span className="hc-item c-inspection">
+                      <Icon name="wrench" size={14} strokeWidth={2.1} />
+                      <strong key={`w${inspectionCount}`}>{inspectionCount}</strong>
+                    </span>
+                  )}
                   {identityCount > 0 && (
                     <span className="hc-item c-identity">
                       <Icon name="idCard" size={15} strokeWidth={2.1} />
@@ -881,10 +893,11 @@ export default function App() {
         // identity checks mean queueing at Regitra with the car, so they get
         // their own list instead of sitting among the registration cases
         const toTake = visible
-          .filter((it) => it.stage === 'take' && it.caseType !== 'tapatybe')
+          .filter((it) => it.stage === 'take' && it.caseType === 'registracija')
           .sort(byUrgency)
         const atRegitra = visible.filter((it) => it.stage === 'regitra')
         const toPickup = visible.filter((it) => it.stage === 'pickup')
+        const inspection = visible.filter((it) => it.caseType === 'apziura').sort(byUrgency)
         const identity = visible.filter((it) => it.caseType === 'tapatybe').sort(byUrgency)
         const managers = [...new Set(atRegitra.map((it) => it.manager))].sort((a, b) =>
           a.localeCompare(b, 'lt'),
@@ -978,6 +991,9 @@ export default function App() {
                   )}
                 </div>
                 <main className="case-list">{toPickup.map(renderCard)}</main>
+
+                <p className="list-caption cap-inspection">Apžiūra · {inspection.length}</p>
+                <main className="case-list">{inspection.map(renderCard)}</main>
 
                 <p className="list-caption cap-identity">Tapatybė · {identity.length}</p>
                 <main className="case-list">{identity.map(renderCard)}</main>

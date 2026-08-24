@@ -195,6 +195,10 @@ textarea {
   color: var(--warn);
 }
 
+.header-counts .c-inspection {
+  color: #ffd60a;
+}
+
 .header-counts .c-identity {
   color: #bf8cff;
 }
@@ -285,6 +289,7 @@ textarea {
 .list-caption.cap-take::before,
 .list-caption.cap-reg::before,
 .list-caption.cap-pickup::before,
+.list-caption.cap-inspection::before,
 .list-caption.cap-identity::before {
   content: '';
   display: inline-block;
@@ -305,6 +310,10 @@ textarea {
 
 .list-caption.cap-pickup::before {
   background: var(--warn);
+}
+
+.list-caption.cap-inspection::before {
+  background: #ffd60a;
 }
 
 .list-caption.cap-identity::before {
@@ -699,8 +708,8 @@ textarea {
 }
 
 .type-badge.type-apziura {
-  color: var(--warn);
-  background: rgba(255, 159, 10, 0.13);
+  color: #ffd60a;
+  background: rgba(255, 214, 10, 0.13);
 }
 
 .type-badge.type-tapatybe {

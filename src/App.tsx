@@ -227,7 +227,11 @@ export default function App() {
   }, [searchOpen])
 
   const toTakeCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.stage === 'take').length,
+    () => cases.filter((it) => !it.completed && it.stage === 'take' && it.caseType !== 'tapatybe').length,
+    [cases],
+  )
+  const identityCount = useMemo(
+    () => cases.filter((it) => !it.completed && it.caseType === 'tapatybe').length,
     [cases],
   )
   const atRegitraCount = useMemo(
@@ -706,11 +710,16 @@ export default function App() {
               </button>
             ) : null}
             {view === 'active' ? (
-              <div className="header-summary">
-                <span className="header-date">{todayLabel}</span>
+              <span className="header-date">{todayLabel}</span>
+            ) : (
+              <h1 className="header-title">Archyvas</h1>
+            )}
+            {view === 'active' && (
                 <span
                   className="header-counts"
                   aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}${
+                    identityCount > 0 ? `, tapatybė ${identityCount}` : ''
+                  }${
                     dueTodayCount > 0 ? `, šiandien atiduoti ${dueTodayCount}` : ''
                   }`}
                 >
@@ -726,6 +735,12 @@ export default function App() {
                     <Icon name="inbox" size={15} strokeWidth={2.1} />
                     <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
                   </span>
+                  {identityCount > 0 && (
+                    <span className="hc-item c-identity">
+                      <Icon name="idCard" size={15} strokeWidth={2.1} />
+                      <strong key={`i${identityCount}`}>{identityCount}</strong>
+                    </span>
+                  )}
                   {dueTodayCount > 0 && (
                     <span className="hc-item c-due">
                       <Icon name="calendar" size={14} strokeWidth={2.1} />
@@ -733,9 +748,6 @@ export default function App() {
                     </span>
                   )}
                 </span>
-              </div>
-            ) : (
-              <h1 className="header-title">Archyvas</h1>
             )}
             <div className="header-actions">
               {view === 'active' && (
@@ -864,11 +876,16 @@ export default function App() {
         }
 
         // sort is stable, so within the same urgency the FIFO order survives
+        const byUrgency = (a: RegistrationCase, b: RegistrationCase) =>
+          reservationRank(a) - reservationRank(b)
+        // identity checks mean queueing at Regitra with the car, so they get
+        // their own list instead of sitting among the registration cases
         const toTake = visible
-          .filter((it) => it.stage === 'take')
-          .sort((a, b) => reservationRank(a) - reservationRank(b))
+          .filter((it) => it.stage === 'take' && it.caseType !== 'tapatybe')
+          .sort(byUrgency)
         const atRegitra = visible.filter((it) => it.stage === 'regitra')
         const toPickup = visible.filter((it) => it.stage === 'pickup')
+        const identity = visible.filter((it) => it.caseType === 'tapatybe').sort(byUrgency)
         const managers = [...new Set(atRegitra.map((it) => it.manager))].sort((a, b) =>
           a.localeCompare(b, 'lt'),
         )
@@ -961,6 +978,9 @@ export default function App() {
                   )}
                 </div>
                 <main className="case-list">{toPickup.map(renderCard)}</main>
+
+                <p className="list-caption cap-identity">Tapatybė · {identity.length}</p>
+                <main className="case-list">{identity.map(renderCard)}</main>
               </>
             )}
           </>

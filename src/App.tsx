@@ -245,6 +245,16 @@ export default function App() {
     [cases, today],
   )
 
+  // brands typed by hand before — offered back as quick chips in the form
+  const customBrands = useMemo(() => {
+    const freq = new Map<string, number>()
+    cases.forEach((it) => {
+      const b = it.brand.trim()
+      if (b && !['Nissan', 'Hyundai', 'Citroen'].includes(b)) freq.set(b, (freq.get(b) ?? 0) + 1)
+    })
+    return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([b]) => b).slice(0, 8)
+  }, [cases])
+
   // most-used manager names power the quick-pick chips in the form
   const managers = useMemo(() => {
     const freq = new Map<string, number>()
@@ -1005,7 +1015,13 @@ export default function App() {
 
       {formOpen && (
         <div className={`form-overlay${formClosing ? ' closing' : ''}`}>
-          <CaseForm initial={editingItem} managers={managers} onCancel={closeForm} onSubmit={handleSubmitForm} />
+          <CaseForm
+            initial={editingItem}
+            managers={managers}
+            customBrands={customBrands}
+            onCancel={closeForm}
+            onSubmit={handleSubmitForm}
+          />
         </div>
       )}
 

@@ -14,11 +14,14 @@ import { useScrolled } from '../useScrolled'
 interface CaseFormProps {
   initial?: RegistrationCase
   managers?: string[]
+  customBrands?: string[]
   onCancel: () => void
   onSubmit: (draft: CaseDraft) => void
 }
 
 const BRANDS = ['Nissan', 'Hyundai', 'Citroen']
+// segmented value standing for "anything else, typed by hand"
+const OTHER_BRAND = '__other'
 
 const BRAND_MODELS: Record<string, string[]> = {
   Nissan: ['Micra', 'Juke', 'Qashqai', 'X-Trail', 'Ariya', 'Leaf', 'Townstar', 'Primastar', 'Interstar'],
@@ -55,8 +58,12 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFormProps) {
-  const [brand, setBrand] = useState(initial?.brand ?? 'Nissan')
+export function CaseForm({ initial, managers = [], customBrands = [], onCancel, onSubmit }: CaseFormProps) {
+  // an older case (or one typed by hand) may carry a brand outside the trio
+  const initialCustomBrand = initial?.brand && !BRANDS.includes(initial.brand) ? initial.brand : ''
+  const [brandMode, setBrandMode] = useState(initialCustomBrand ? OTHER_BRAND : (initial?.brand ?? 'Nissan'))
+  const [customBrand, setCustomBrand] = useState(initialCustomBrand)
+  const brand = brandMode === OTHER_BRAND ? customBrand : brandMode
   const [model, setModel] = useState(initial?.model ?? '')
   const [vin, setVin] = useState(initial?.vin ?? '')
   const [regNumber, setRegNumber] = useState(initial?.regNumber ?? '')
@@ -78,10 +85,6 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [triedSubmit, setTriedSubmit] = useState(false)
   const scrolled = useScrolled()
-
-  // an older case may carry a brand outside the fixed trio — keep it selectable
-  const brandOptions =
-    initial?.brand && !BRANDS.includes(initial.brand) ? [...BRANDS, initial.brand] : BRANDS
 
   const cleanVehicles = fleetVehicles
     .map((v) => ({ model: v.model.trim(), count: Math.max(1, v.count) }))
@@ -153,16 +156,48 @@ export function CaseForm({ initial, managers = [], onCancel, onSubmit }: CaseFor
 
         <div className="field">
           <span className="field-label">Markė</span>
-          <div
-            className="segmented"
-            style={{ gridTemplateColumns: `repeat(${brandOptions.length}, 1fr)` }}
-          >
-            {brandOptions.map((b) => (
-              <button key={b} type="button" className={brand === b ? 'active' : ''} onClick={() => setBrand(b)}>
-                {b}
+          <div className="segmented brand-segmented" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            {[...BRANDS, OTHER_BRAND].map((b) => (
+              <button
+                key={b}
+                type="button"
+                className={brandMode === b ? 'active' : ''}
+                onClick={() => setBrandMode(b)}
+              >
+                {b === OTHER_BRAND ? 'Kita' : b}
               </button>
             ))}
           </div>
+
+          {brandMode === OTHER_BRAND && (
+            <>
+              <input
+                className={`brand-input${triedSubmit && !brand.trim() ? ' invalid' : ''}`}
+                value={customBrand}
+                onChange={(e) => setCustomBrand(e.target.value)}
+                placeholder="Pvz.: Dacia"
+                aria-label="Markės pavadinimas"
+                autoComplete="off"
+                autoCapitalize="words"
+              />
+              {customBrands.length > 0 && (
+                <div className="chip-row" role="listbox" aria-label="Anksčiau naudotos markės">
+                  {customBrands.map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      role="option"
+                      aria-selected={customBrand === b}
+                      className={`chip${customBrand === b ? ' active' : ''}`}
+                      onClick={() => setCustomBrand(b)}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {!fleet && (

@@ -1002,6 +1002,13 @@ textarea {
   background: var(--line);
 }
 
+.btn.convert-btn {
+  width: 100%;
+  margin-top: 12px;
+  color: var(--accent-2);
+  border-color: var(--accent-2-line);
+}
+
 .btn-ghost.danger {
   color: var(--bad);
   padding: 0 14px;

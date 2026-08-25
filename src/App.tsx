@@ -332,6 +332,12 @@ export default function App() {
   const handleAdvanceStage = (id: string) => {
     const item = cases.find((it) => it.id === id)
     if (!item) return
+    // an errand has no stages of its own — the same gesture hands it over
+    // to Regitra as a registration instead
+    if (item.caseType !== 'registracija') {
+      handleConvertToRegistration(id)
+      return
+    }
     const { next, label } = STAGE_FLOW[item.stage]
     const before = { stage: item.stage, regitraAt: item.regitraAt, pickupAt: item.pickupAt }
     const now = Date.now()
@@ -343,6 +349,18 @@ export default function App() {
       pickupAt: item.pickupAt ?? (next === 'pickup' ? now : null),
     })
     showUndo(label, () => update(id, before))
+  }
+
+  // an inspection or identity errand becomes a registration handed straight
+  // to Regitra — the documents stay there, so it lands in "Regitroje"
+  const handleConvertToRegistration = (id: string) => {
+    const item = cases.find((it) => it.id === id)
+    if (!item || item.caseType === 'registracija') return
+    const before = { caseType: item.caseType, stage: item.stage, regitraAt: item.regitraAt }
+    setExpandedId(null)
+    navigator.vibrate?.(20)
+    update(id, { caseType: 'registracija', stage: 'regitra', regitraAt: item.regitraAt ?? Date.now() })
+    showUndo('Atiduota Regitrai', () => update(id, before))
   }
 
   const handleRequestComplete = (id: string) => {
@@ -832,6 +850,7 @@ export default function App() {
             onSaveNotes={(id, notes) => update(id, { notes })}
             onEdit={handleEdit}
             onRestore={view === 'archive' ? handleRestore : undefined}
+            onConvertToRegistration={handleConvertToRegistration}
             onRequestDelete={(id) => setDeleteId(id)}
           />
         )

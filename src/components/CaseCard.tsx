@@ -14,6 +14,7 @@ interface CaseCardProps {
   onSaveNotes: (id: string, notes: string) => void
   onEdit: (id: string) => void
   onRestore?: (id: string) => void
+  onConvertToRegistration: (id: string) => void
   onRequestDelete: (id: string) => void
 }
 
@@ -34,6 +35,7 @@ export function CaseCard({
   onSaveNotes,
   onEdit,
   onRestore,
+  onConvertToRegistration,
   onRequestDelete,
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
@@ -88,9 +90,11 @@ export function CaseCard({
   const holdTimer = useRef<number | undefined>(undefined)
   const longPress = useRef({ timer: undefined as number | undefined, fired: false, x: 0, y: 0 })
   const swipeEnabled = !item.completed && !expanded
-  // right-swipe walks the case around the loop: with me → at Regitra → ready to
-  // collect → back to me, so an accidental step can simply be walked off
-  const canAdvance = item.caseType === 'registracija'
+  // right-swipe walks a registration around the loop: with me → at Regitra →
+  // ready to collect → back to me, so an accidental step can be walked off.
+  // On an errand the same gesture hands the case over to Regitra.
+  const canAdvance = true
+  const handsOver = item.caseType !== 'registracija'
 
   const clearLongPress = () => {
     window.clearTimeout(longPress.current.timer)
@@ -230,7 +234,9 @@ export function CaseCard({
             }`}
           >
             <Icon
-              name={item.stage === 'take' ? 'landmark' : item.stage === 'regitra' ? 'inbox' : 'car'}
+              name={
+                handsOver || item.stage === 'take' ? 'landmark' : item.stage === 'regitra' ? 'inbox' : 'car'
+              }
               size={20}
             />
           </span>
@@ -440,6 +446,17 @@ export function CaseCard({
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
           />
+
+          {item.caseType !== 'registracija' && !item.completed && (
+            <button
+              type="button"
+              className="btn btn-ghost convert-btn"
+              onClick={() => onConvertToRegistration(item.id)}
+            >
+              <Icon name="landmark" size={17} />
+              Atiduoti Regitrai
+            </button>
+          )}
 
           <div className="notes-actions">
             <button type="button" className="btn btn-ghost" onClick={() => onEdit(item.id)}>

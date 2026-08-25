@@ -278,7 +278,9 @@ textarea {
 }
 
 .case-list + .list-caption,
-.case-list + .list-caption-row {
+.case-list + .list-caption-row,
+.manager-group + .list-caption,
+.manager-group + .list-caption-row {
   margin-top: 20px;
 }
 

@@ -747,18 +747,24 @@ export default function App() {
                     dueTodayCount > 0 ? `, šiandien atiduoti ${dueTodayCount}` : ''
                   }`}
                 >
-                  <span className="hc-item c-take">
-                    <Icon name="car" size={15} strokeWidth={2.1} />
-                    <strong key={`t${toTakeCount}`}>{toTakeCount}</strong>
-                  </span>
-                  <span className="hc-item c-reg">
-                    <Icon name="landmark" size={14} strokeWidth={2.1} />
-                    <strong key={`r${atRegitraCount}`}>{atRegitraCount}</strong>
-                  </span>
-                  <span className="hc-item c-pickup">
-                    <Icon name="inbox" size={15} strokeWidth={2.1} />
-                    <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
-                  </span>
+                  {toTakeCount > 0 && (
+                    <span className="hc-item c-take">
+                      <Icon name="car" size={15} strokeWidth={2.1} />
+                      <strong key={`t${toTakeCount}`}>{toTakeCount}</strong>
+                    </span>
+                  )}
+                  {atRegitraCount > 0 && (
+                    <span className="hc-item c-reg">
+                      <Icon name="landmark" size={14} strokeWidth={2.1} />
+                      <strong key={`r${atRegitraCount}`}>{atRegitraCount}</strong>
+                    </span>
+                  )}
+                  {toPickupCount > 0 && (
+                    <span className="hc-item c-pickup">
+                      <Icon name="inbox" size={15} strokeWidth={2.1} />
+                      <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
+                    </span>
+                  )}
                   {inspectionCount > 0 && (
                     <span className="hc-item c-inspection">
                       <Icon name="wrench" size={14} strokeWidth={2.1} />
@@ -944,78 +950,95 @@ export default function App() {
               </main>
             ) : (
               <>
-                <p className="list-caption cap-take">Vežti · {toTake.length}</p>
-                <main className="case-list">{toTake.map(renderCard)}</main>
-
-                <div className="list-caption-row">
-                  <p className="list-caption cap-reg">Regitroje · {atRegitra.length}</p>
-                  <div className="caption-actions">
-                    {atRegitra.length > 0 && (
-                      <button
-                        type="button"
-                        className="group-toggle"
-                        aria-label="Kopijuoti sąrašą"
-                        onClick={() => handleCopyList('regitra')}
-                      >
-                        <Icon name="copy" size={15} />
-                      </button>
-                    )}
-                    {atRegitra.length > 1 && (
-                      <button
-                        type="button"
-                        className={`group-toggle${groupByManager ? ' active' : ''}`}
-                        aria-label="Grupuoti pagal vadybininką"
-                        aria-pressed={groupByManager}
-                        onClick={() => setGroupByManager((v) => !v)}
-                      >
-                        <Icon name="users" size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {groupByManager && atRegitra.length > 1 ? (
-                  managers.map((m) => (
-                    <div key={m} className="manager-group">
-                      <p className="manager-caption">{m}</p>
-                      <div className="case-list">
-                        {atRegitra.filter((it) => it.manager === m).map(renderCard)}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <main className="case-list">{atRegitra.map(renderCard)}</main>
+                {/* a section only exists while it holds something */}
+                {toTake.length > 0 && (
+                  <>
+                    <p className="list-caption cap-take">Vežti · {toTake.length}</p>
+                    <main className="case-list">{toTake.map(renderCard)}</main>
+                  </>
                 )}
 
-                <div className="list-caption-row">
-                  <p className="list-caption cap-pickup">Paimti iš Regitros · {toPickup.length}</p>
-                  {toPickup.length > 0 && (
-                    <div className="caption-actions">
-                      <button
-                        type="button"
-                        className="group-toggle"
-                        aria-label="Kopijuoti paėmimo sąrašą"
-                        onClick={() => handleCopyList('pickup')}
-                      >
-                        <Icon name="copy" size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className="group-toggle ok"
-                        aria-label="Užbaigti paimtas bylas"
-                        onClick={() => setBulkOpen(true)}
-                      >
-                        <Icon name="check" size={16} strokeWidth={2.6} />
-                      </button>
+                {atRegitra.length > 0 && (
+                  <>
+                    <div className="list-caption-row">
+                      <p className="list-caption cap-reg">Regitroje · {atRegitra.length}</p>
+                      <div className="caption-actions">
+                        <button
+                          type="button"
+                          className="group-toggle"
+                          aria-label="Kopijuoti sąrašą"
+                          onClick={() => handleCopyList('regitra')}
+                        >
+                          <Icon name="copy" size={15} />
+                        </button>
+                        {atRegitra.length > 1 && (
+                          <button
+                            type="button"
+                            className={`group-toggle${groupByManager ? ' active' : ''}`}
+                            aria-label="Grupuoti pagal vadybininką"
+                            aria-pressed={groupByManager}
+                            onClick={() => setGroupByManager((v) => !v)}
+                          >
+                            <Icon name="users" size={16} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-                <main className="case-list">{toPickup.map(renderCard)}</main>
+                    {groupByManager && atRegitra.length > 1 ? (
+                      managers.map((m) => (
+                        <div key={m} className="manager-group">
+                          <p className="manager-caption">{m}</p>
+                          <div className="case-list">
+                            {atRegitra.filter((it) => it.manager === m).map(renderCard)}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <main className="case-list">{atRegitra.map(renderCard)}</main>
+                    )}
+                  </>
+                )}
 
-                <p className="list-caption cap-inspection">Apžiūra · {inspection.length}</p>
-                <main className="case-list">{inspection.map(renderCard)}</main>
+                {toPickup.length > 0 && (
+                  <>
+                    <div className="list-caption-row">
+                      <p className="list-caption cap-pickup">Paimti iš Regitros · {toPickup.length}</p>
+                      <div className="caption-actions">
+                        <button
+                          type="button"
+                          className="group-toggle"
+                          aria-label="Kopijuoti paėmimo sąrašą"
+                          onClick={() => handleCopyList('pickup')}
+                        >
+                          <Icon name="copy" size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          className="group-toggle ok"
+                          aria-label="Užbaigti paimtas bylas"
+                          onClick={() => setBulkOpen(true)}
+                        >
+                          <Icon name="check" size={16} strokeWidth={2.6} />
+                        </button>
+                      </div>
+                    </div>
+                    <main className="case-list">{toPickup.map(renderCard)}</main>
+                  </>
+                )}
 
-                <p className="list-caption cap-identity">Tapatybė · {identity.length}</p>
-                <main className="case-list">{identity.map(renderCard)}</main>
+                {inspection.length > 0 && (
+                  <>
+                    <p className="list-caption cap-inspection">Apžiūra · {inspection.length}</p>
+                    <main className="case-list">{inspection.map(renderCard)}</main>
+                  </>
+                )}
+
+                {identity.length > 0 && (
+                  <>
+                    <p className="list-caption cap-identity">Tapatybė · {identity.length}</p>
+                    <main className="case-list">{identity.map(renderCard)}</main>
+                  </>
+                )}
               </>
             )}
           </>

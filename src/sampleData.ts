@@ -31,7 +31,6 @@ function c(
     fleet: false,
     vehicleCount: 1,
     fleetVehicles: [],
-    tasks: [],
     caseType: 'registracija',
     techSheet: 'none',
     stage: 'take',

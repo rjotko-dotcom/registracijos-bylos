@@ -11,7 +11,7 @@ await page.goto('http://localhost:5173', { waitUntil: 'networkidle' })
 await page.evaluate(() => {
   const base = { brand: 'Nissan', vin: '1111', regNumber: 'AAA111', manager: 'M', salon: 'L1',
     techSheet: 'needed', notes: '', reservedAt: '', fleet: false, vehicleCount: 1, fleetVehicles: [],
-    tasks: [], completed: false, regitraAt: null, pickupAt: null, completedAt: null,
+    completed: false, regitraAt: null, pickupAt: null, completedAt: null,
     stage: 'take', caseType: 'registracija', date: '2026-08-24' }
   localStorage.setItem('registracijos-bylos:v1', JSON.stringify(
     ['Qashqai', 'Juke', 'Leaf'].map((model, i) => ({ ...base, id: `c${i}`, model, createdAt: i })),

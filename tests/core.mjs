@@ -8,7 +8,7 @@ const fail = (m) => { console.log('FAIL:', m); process.exitCode = 1 }
 const BASE = {
   brand: 'Nissan', vin: '1111', regNumber: 'AAA111', manager: 'Mantas J.', salon: 'L1',
   techSheet: 'none', notes: '', reservedAt: '', fleet: false, vehicleCount: 1, fleetVehicles: [],
-  tasks: [], completed: false, regitraAt: null, pickupAt: null, completedAt: null,
+  completed: false, regitraAt: null, pickupAt: null, completedAt: null,
   stage: 'take', caseType: 'registracija', date: '2026-08-24',
 }
 const seed = (list) => page.evaluate(({ base, list }) => {
@@ -49,7 +49,7 @@ let st = await stored()
 if (st[0].stage !== 'regitra') fail(`legacy regitraDone → stage: ${st[0].stage}`)
 if (st[0].techSheet !== 'needed') fail(`legacy techSheetNeeded → techSheet: ${st[0].techSheet}`)
 if ('regitraDone' in st[0]) fail('legacy flag not dropped')
-if (!Array.isArray(st[0].tasks)) fail('tasks not backfilled')
+if ('tasks' in st[0]) fail('the short-lived per-case tasks field should be dropped')
 if (typeof st[0].reservedAt !== 'string') fail('reservedAt not backfilled')
 
 // ---------- sections: only what exists, in workflow order ----------

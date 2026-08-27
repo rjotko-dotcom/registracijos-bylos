@@ -20,9 +20,10 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
   }
   if (!out.techSheet) out.techSheet = 'none'
   if (!out.caseType) out.caseType = 'registracija'
-  // drop fields from the short-lived extra-tasks experiment
+  // drop fields from short-lived experiments
   delete (out as unknown as Record<string, unknown>).apziura
   delete (out as unknown as Record<string, unknown>).tapatybe
+  delete (out as unknown as Record<string, unknown>).tasks
   if (out.regitraAt === undefined) {
     out.regitraAt = out.regitraDone ? Date.now() : null
   }
@@ -31,7 +32,6 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
   delete out.regitraDone
   if (out.pickupAt === undefined) out.pickupAt = out.stage === 'pickup' ? Date.now() : null
   if (typeof out.reservedAt !== 'string') out.reservedAt = ''
-  if (!Array.isArray(out.tasks)) out.tasks = []
   if (!Array.isArray(out.fleetVehicles)) {
     out.fleetVehicles = out.fleet ? [{ model: out.model, count: out.vehicleCount || 1 }] : []
   }

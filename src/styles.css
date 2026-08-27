@@ -794,10 +794,10 @@ textarea {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 9px 14px 10px;
+  padding: 10px 14px;
   background: var(--surface-2);
   background-image: linear-gradient(var(--surface-2), var(--surface-2));
-  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   cursor: pointer;
 }
 

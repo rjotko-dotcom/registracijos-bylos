@@ -239,6 +239,26 @@ export function CaseCard({
 
   return (
     <article className={`case-card${item.completed ? ' is-completed' : ''}`} data-flip-id={item.id}>
+      {!expanded &&
+        item.tasks
+          .filter((t) => !t.done)
+          .map((t) => (
+            <div key={t.id} className="task-strip" onClick={() => onToggleExpand(item.id)}>
+              <button
+                type="button"
+                className="task-check"
+                role="checkbox"
+                aria-checked={false}
+                aria-label={`Atlikta: ${t.text}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleTask(item.id, t.id)
+                }}
+              />
+              <span className="task-strip-text">{t.text}</span>
+            </div>
+          ))}
+
       <div className="row-zone">
       <div className="swipe-layer" aria-hidden="true">
         {canAdvance && (
@@ -390,26 +410,6 @@ export function CaseCard({
       </div>
 
       </div>
-
-      {!expanded &&
-        item.tasks
-          .filter((t) => !t.done)
-          .map((t) => (
-            <div key={t.id} className="task-strip" onClick={() => onToggleExpand(item.id)}>
-              <button
-                type="button"
-                className="task-check"
-                role="checkbox"
-                aria-checked={false}
-                aria-label={`Atlikta: ${t.text}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleTask(item.id, t.id)
-                }}
-              />
-              <span className="task-strip-text">{t.text}</span>
-            </div>
-          ))}
 
       {item.notes && !expanded && (
         <div className="note-strip" onClick={() => onToggleExpand(item.id)}>

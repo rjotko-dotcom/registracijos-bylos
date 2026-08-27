@@ -12,23 +12,39 @@ import { daysUntil } from './dates'
 
 type View = 'active' | 'archive' | 'notes'
 
+// Where an element sits in the layout, walking the offsetParent chain.
+// Deliberately not getBoundingClientRect(): that reports the *painted* box, so
+// it counts the card-in entry animation's transform and the page scroll —
+// both of which would read as movement that never happened.
+function layoutPosition(el: HTMLElement): { top: number; left: number } {
+  let top = 0
+  let left = 0
+  let node: HTMLElement | null = el
+  while (node) {
+    top += node.offsetTop
+    left += node.offsetLeft
+    node = node.offsetParent as HTMLElement | null
+  }
+  return { top, left }
+}
+
 // FLIP: when cards jump between sections (or reorder), animate them from
 // their previous position to the new one instead of teleporting
 function useFlipAnimations(deps: unknown[]) {
-  const positions = useRef(new Map<string, DOMRect>())
+  const positions = useRef(new Map<string, { top: number; left: number }>())
   useLayoutEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const cards = document.querySelectorAll<HTMLElement>('[data-flip-id]')
-    const next = new Map<string, DOMRect>()
+    const next = new Map<string, { top: number; left: number }>()
     cards.forEach((el) => {
       const id = el.dataset.flipId
       if (!id) return
-      const rect = el.getBoundingClientRect()
-      next.set(id, rect)
+      const pos = layoutPosition(el)
+      next.set(id, pos)
       const old = positions.current.get(id)
       if (!reduce && old) {
-        const dx = old.left - rect.left
-        const dy = old.top - rect.top
+        const dx = old.left - pos.left
+        const dy = old.top - pos.top
         if (Math.abs(dx) + Math.abs(dy) > 6) {
           el.animate(
             [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],

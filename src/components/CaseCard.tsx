@@ -15,6 +15,9 @@ interface CaseCardProps {
   onEdit: (id: string) => void
   onRestore?: (id: string) => void
   onConvertToRegistration: (id: string) => void
+  onAddTask: (id: string, text: string) => void
+  onToggleTask: (id: string, taskId: string) => void
+  onDeleteTask: (id: string, taskId: string) => void
   onRequestDelete: (id: string) => void
 }
 
@@ -36,9 +39,13 @@ export function CaseCard({
   onEdit,
   onRestore,
   onConvertToRegistration,
+  onAddTask,
+  onToggleTask,
+  onDeleteTask,
   onRequestDelete,
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
+  const [taskDraft, setTaskDraft] = useState('')
   const [saved, setSaved] = useState(false)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const savedTimer = useRef<number | undefined>(undefined)
@@ -129,6 +136,13 @@ export function CaseCard({
     },
     [],
   )
+
+  const addTask = () => {
+    const text = taskDraft.trim()
+    if (!text) return
+    onAddTask(item.id, text)
+    setTaskDraft('')
+  }
 
   const handleSaveNotes = () => {
     onSaveNotes(item.id, noteDraft.trim())
@@ -332,7 +346,6 @@ export function CaseCard({
           )}
         </div>
 
-        {item.caseType === 'registracija' && (
         <button
           type="button"
           className={`icon-btn doc-btn ${
@@ -356,7 +369,6 @@ export function CaseCard({
             size={21}
           />
         </button>
-        )}
 
         {item.caseType === 'registracija' && (
           <span
@@ -378,6 +390,26 @@ export function CaseCard({
       </div>
 
       </div>
+
+      {!expanded &&
+        item.tasks
+          .filter((t) => !t.done)
+          .map((t) => (
+            <div key={t.id} className="task-strip" onClick={() => onToggleExpand(item.id)}>
+              <button
+                type="button"
+                className="task-check"
+                role="checkbox"
+                aria-checked={false}
+                aria-label={`Atlikta: ${t.text}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleTask(item.id, t.id)
+                }}
+              />
+              <span className="task-strip-text">{t.text}</span>
+            </div>
+          ))}
 
       {item.notes && !expanded && (
         <div className="note-strip" onClick={() => onToggleExpand(item.id)}>
@@ -433,6 +465,59 @@ export function CaseCard({
                 </span>
               </div>
             )}
+          </div>
+
+          <span className="notes-label">Darbai</span>
+          <div className="task-list">
+            {item.tasks.map((t) => (
+              <div key={t.id} className={`task-item${t.done ? ' done' : ''}`}>
+                <button
+                  type="button"
+                  className="task-check"
+                  role="checkbox"
+                  aria-checked={t.done}
+                  aria-label={t.done ? 'Pažymėti kaip neatliktą' : 'Pažymėti kaip atliktą'}
+                  onClick={() => onToggleTask(item.id, t.id)}
+                >
+                  {t.done && <Icon name="check" size={13} strokeWidth={3} />}
+                </button>
+                <span className="task-text" onClick={() => onToggleTask(item.id, t.id)}>
+                  {t.text}
+                </span>
+                <button
+                  type="button"
+                  className="icon-btn task-del"
+                  aria-label="Pašalinti darbą"
+                  onClick={() => onDeleteTask(item.id, t.id)}
+                >
+                  <Icon name="close" size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="task-add">
+            <input
+              value={taskDraft}
+              onChange={(e) => setTaskDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addTask()
+                }
+              }}
+              placeholder="Pvz.: išpjauti naują rakto geležtę"
+              aria-label="Naujas darbas"
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className="icon-btn task-add-btn"
+              aria-label="Pridėti darbą prie bylos"
+              disabled={!taskDraft.trim()}
+              onClick={addTask}
+            >
+              <Icon name="plus" size={18} strokeWidth={2.4} />
+            </button>
           </div>
 
           <label className="notes-label" htmlFor={`notes-${item.id}`}>

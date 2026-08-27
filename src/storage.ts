@@ -31,6 +31,7 @@ export function migrate(it: Record<string, unknown>): RegistrationCase {
   delete out.regitraDone
   if (out.pickupAt === undefined) out.pickupAt = out.stage === 'pickup' ? Date.now() : null
   if (typeof out.reservedAt !== 'string') out.reservedAt = ''
+  if (!Array.isArray(out.tasks)) out.tasks = []
   if (!Array.isArray(out.fleetVehicles)) {
     out.fleetVehicles = out.fleet ? [{ model: out.model, count: out.vehicleCount || 1 }] : []
   }

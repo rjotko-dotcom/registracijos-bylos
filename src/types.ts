@@ -9,6 +9,14 @@ export interface FleetVehicle {
   count: number
 }
 
+// a small job attached to one case ("cut a new key blade") — kept on the card
+// so it is visible without opening anything
+export interface CaseTask {
+  id: string
+  text: string
+  done: boolean
+}
+
 export interface RegistrationCase {
   id: string
   brand: string
@@ -22,6 +30,7 @@ export interface RegistrationCase {
   fleet: boolean
   vehicleCount: number
   fleetVehicles: FleetVehicle[] // per-model breakdown of a fleet order
+  tasks: CaseTask[]
   caseType: CaseType
   techSheet: TechSheet
   stage: Stage
@@ -35,5 +44,5 @@ export interface RegistrationCase {
 
 export type CaseDraft = Omit<
   RegistrationCase,
-  'id' | 'createdAt' | 'completedAt' | 'regitraAt' | 'pickupAt'
+  'id' | 'createdAt' | 'completedAt' | 'regitraAt' | 'pickupAt' | 'tasks'
 >

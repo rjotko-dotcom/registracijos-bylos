@@ -112,7 +112,7 @@ export function CaseForm({ initial, managers = [], customBrands = [], onCancel, 
       vehicleCount: fleet ? cleanVehicles.reduce((sum, v) => sum + v.count, 0) : 1,
       fleetVehicles: fleet ? cleanVehicles : [],
       caseType,
-      techSheet: caseType === 'registracija' ? techSheet : 'none',
+      techSheet,
       stage: caseType === 'registracija' ? stage : 'take',
       notes: notes.trim(),
       completed: initial?.completed ?? false,
@@ -401,7 +401,6 @@ export function CaseForm({ initial, managers = [], customBrands = [], onCancel, 
           </div>
         )}
 
-        {caseType === 'registracija' && (
         <div className="field">
           <span className="field-label">Techninis lapas</span>
           <div className="segmented" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
@@ -423,7 +422,6 @@ export function CaseForm({ initial, managers = [], customBrands = [], onCancel, 
             ))}
           </div>
         </div>
-        )}
 
         {caseType === 'registracija' && (
         <div className="field">

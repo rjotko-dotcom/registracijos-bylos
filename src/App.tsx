@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { CaseDraft, RegistrationCase, Stage } from './types'
+import type { CaseDraft, CaseTask, RegistrationCase, Stage } from './types'
 import { loadCases, migrate, saveCases } from './storage'
 import { CaseCard } from './components/CaseCard'
 import { CaseForm } from './components/CaseForm'
@@ -363,6 +363,19 @@ export default function App() {
     showUndo('Atiduota Regitrai', () => update(id, before))
   }
 
+  // small jobs pinned to one case, edited from the card itself
+  const patchTasks = (id: string, fn: (tasks: CaseTask[]) => CaseTask[]) =>
+    setCases((prev) => prev.map((it) => (it.id === id ? { ...it, tasks: fn(it.tasks) } : it)))
+
+  const handleAddTask = (id: string, text: string) =>
+    patchTasks(id, (tasks) => [...tasks, { id: `k${Date.now().toString(36)}`, text, done: false }])
+
+  const handleToggleTask = (id: string, taskId: string) =>
+    patchTasks(id, (tasks) => tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)))
+
+  const handleDeleteTask = (id: string, taskId: string) =>
+    patchTasks(id, (tasks) => tasks.filter((t) => t.id !== taskId))
+
   const handleRequestComplete = (id: string) => {
     const item = cases.find((it) => it.id === id)
     if (!item) return
@@ -492,6 +505,7 @@ export default function App() {
           id: `c${now.toString(36)}`,
           createdAt: now,
           completedAt: null,
+          tasks: [],
           regitraAt: draft.stage === 'take' ? null : now,
           pickupAt: draft.stage === 'pickup' ? now : null,
         },
@@ -857,6 +871,9 @@ export default function App() {
             onEdit={handleEdit}
             onRestore={view === 'archive' ? handleRestore : undefined}
             onConvertToRegistration={handleConvertToRegistration}
+            onAddTask={handleAddTask}
+            onToggleTask={handleToggleTask}
+            onDeleteTask={handleDeleteTask}
             onRequestDelete={(id) => setDeleteId(id)}
           />
         )

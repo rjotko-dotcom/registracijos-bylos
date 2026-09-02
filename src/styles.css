@@ -783,47 +783,6 @@ textarea {
     border-color 0.15s ease;
 }
 
-.task-add {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.task-add input {
-  flex: 1;
-  min-width: 0;
-  height: 48px;
-  background: var(--surface);
-  background-image: linear-gradient(var(--surface), var(--surface));
-  border: 1px solid var(--line);
-  border-radius: var(--r-ctl);
-  padding: 0 14px;
-  font-size: 15px;
-  outline: none;
-}
-
-.task-add input:focus {
-  border-color: var(--accent);
-}
-
-.task-add input::placeholder {
-  color: var(--text-3);
-}
-
-.task-add-btn {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: var(--r-ctl);
-  background: var(--ok);
-  background-image: linear-gradient(var(--ok), var(--ok));
-  color: var(--on-ok);
-}
-
-.task-add-btn:disabled {
-  opacity: 0.35;
-}
-
 /* ---------- Note preview strip ---------- */
 
 .note-strip {
@@ -1976,8 +1935,7 @@ body {
 .swipe-hint.armed,
 .btn-success,
 .todo-item.done .todo-check,
-.bulk-item.on .bulk-check,
-.task-add-btn {
+.bulk-item.on .bulk-check {
   box-shadow: inset 0 0 0 99px var(--ok);
 }
 

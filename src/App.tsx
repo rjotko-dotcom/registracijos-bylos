@@ -123,7 +123,6 @@ export default function App() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<RegistrationCase[] | null>(null)
   const [bulkOpen, setBulkOpen] = useState(false)
-  const [quickTask, setQuickTask] = useState<string | null>(null)
   const [dataMsg, setDataMsg] = useState('')
   const [notice, setNotice] = useState('')
   const [todos, setTodos] = useState<TodoItem[]>(() => {
@@ -386,13 +385,6 @@ export default function App() {
 
   const toggleTodo = (id: string) =>
     setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
-
-  const addQuickTask = () => {
-    const text = (quickTask ?? '').trim()
-    if (!text) return
-    setTodos((prev) => [...prev, { id: `t${Date.now().toString(36)}`, text, done: false }])
-    setQuickTask('')
-  }
 
   const handleRequestComplete = (id: string) => {
     const item = cases.find((it) => it.id === id)
@@ -871,51 +863,9 @@ export default function App() {
         )}
       </header>
 
-      {view === 'active' && !(searchOpen && query.trim() !== '') && (pendingTodos.length > 0 || quickTask !== null) && (
+      {view === 'active' && !(searchOpen && query.trim() !== '') && pendingTodos.length > 0 && (
         <section className="day-tasks">
-          <div className="list-caption-row">
-            <p className="list-caption cap-day">Darbai · {pendingTodos.length}</p>
-            <div className="caption-actions">
-              <button
-                type="button"
-                className="group-toggle"
-                aria-label={quickTask === null ? 'Pridėti darbą' : 'Uždaryti įvedimą'}
-                onClick={() => setQuickTask((v) => (v === null ? '' : null))}
-              >
-                <Icon name={quickTask === null ? 'plus' : 'close'} size={16} strokeWidth={2.4} />
-              </button>
-            </div>
-          </div>
-
-          {quickTask !== null && (
-            <div className="task-add">
-              <input
-                autoFocus
-                value={quickTask}
-                onChange={(e) => setQuickTask(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addQuickTask()
-                  }
-                  if (e.key === 'Escape') setQuickTask(null)
-                }}
-                placeholder="Pvz.: nuvežti sąskaitas"
-                aria-label="Naujas darbas"
-                autoComplete="off"
-              />
-              <button
-                type="button"
-                className="icon-btn task-add-btn"
-                aria-label="Išsaugoti darbą"
-                disabled={!quickTask.trim()}
-                onClick={addQuickTask}
-              >
-                <Icon name="check" size={18} strokeWidth={2.6} />
-              </button>
-            </div>
-          )}
-
+          <p className="list-caption">Darbai · {pendingTodos.length}</p>
           {pendingTodos.map((t) => (
             <div key={t.id} className="task-strip">
               <button

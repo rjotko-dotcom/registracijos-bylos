@@ -63,16 +63,19 @@ const order = await page.evaluate(() => {
 })
 if (order !== 'tasks-first') fail('tasks must come before the cases')
 
-// ---------- quick add straight from the main screen ----------
+// ---------- the pinned strip is read-only apart from its checkboxes ----------
+if (await page.locator('.day-tasks button:not(.task-check)').count()) fail('the pinned strip should carry nothing but checkboxes')
+// a second task, added where tasks are written
+await page.click("button[aria-label='Užrašai']")
+await page.waitForTimeout(400)
+await page.fill("input[placeholder='Pvz.: paimti sąskaitas faktūras']", 'Paimti antspaudą')
 await page.click("button[aria-label='Pridėti darbą']")
 await page.waitForTimeout(300)
-await page.fill(".day-tasks input[aria-label='Naujas darbas']", 'Paimti antspaudą')
-await page.click("button[aria-label='Išsaugoti darbą']")
+await page.click("button[aria-label='Grįžti']")
 await page.waitForTimeout(400)
 strips = await page.locator('.day-tasks .task-strip-text').allTextContents()
-if (strips.length !== 2 || !strips.includes('Paimti antspaudą')) fail('quick add failed: ' + strips.join(' | '))
-// the same list Užrašai shows
-if ((await todos()).length !== 2) fail('quick-added task did not join the day list')
+if (strips.length !== 2 || !strips.includes('Paimti antspaudą')) fail('second task not pinned: ' + strips.join(' | '))
+if ((await todos()).length !== 2) fail('day list out of step')
 
 // ---------- ticking one clears it from the top but keeps it in Užrašai ----------
 await page.locator('.day-tasks .task-check').first().click()
@@ -84,9 +87,6 @@ if (list.length !== 2) fail('completing a task must not delete it')
 if (!list.find((t) => t.text === 'Nuvežti sąskaitas').done) fail('task not marked done')
 
 // ---------- last one done → the strip disappears ----------
-// (the add box holds the section open on purpose, so close it first)
-await page.click("button[aria-label='Uždaryti įvedimą']")
-await page.waitForTimeout(300)
 await page.locator('.day-tasks .task-check').first().click()
 await page.waitForTimeout(400)
 if (await page.locator('.day-tasks').count()) fail('the strip should vanish once everything is done')

@@ -761,11 +761,8 @@ export default function App() {
               </button>
             ) : null}
             {view === 'active' ? (
-              <span className="header-date">{todayLabel}</span>
-            ) : (
-              <h1 className="header-title">Archyvas</h1>
-            )}
-            {view === 'active' && (
+              <div className="header-summary">
+                <span className="header-date">{todayLabel}</span>
                 <span
                   className="header-counts"
                   aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}${
@@ -813,6 +810,9 @@ export default function App() {
                     </span>
                   )}
                 </span>
+              </div>
+            ) : (
+              <h1 className="header-title">Archyvas</h1>
             )}
             <div className="header-actions">
               {view === 'active' && (

@@ -9,10 +9,10 @@
      without this Chrome's Auto Dark Theme re-darkens the already-dark page */
   color-scheme: dark;
 
-  --bg: #0a0a0c;
-  --surface: #17171b;
-  --surface-2: #232329;
-  --line: #2a2a31;
+  --bg: #000000;
+  --surface: #131315;
+  --surface-2: #1e1e21;
+  --line: #262629;
   --line-strong: #3b3b44;
 
   --text: #f4f4f5;
@@ -34,6 +34,9 @@
   --warn: #ff9f0a;
   --on-accent: #ffffff;
   --on-ok: #03290f;
+  /* the one "do it" surface: plain white, no hue */
+  --solid: #ffffff;
+  --on-solid: #08080a;
 
   --r-card: 22px;
   --r-ctl: 14px;
@@ -120,7 +123,7 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(10, 10, 12, 0.85);
+  background: rgba(0, 0, 0, 0.85);
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
   backdrop-filter: blur(16px) saturate(1.3);
   border-bottom: 1px solid transparent;
@@ -160,7 +163,7 @@ textarea {
   font-size: 16.5px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--text-2);
+  color: var(--text);
   white-space: nowrap;
 }
 
@@ -183,26 +186,8 @@ textarea {
   }
 }
 
-.header-counts .c-take {
-  color: var(--accent);
-}
-
-.header-counts .c-reg {
-  color: var(--accent-2);
-}
-
-.header-counts .c-pickup {
-  color: var(--warn);
-}
-
-.header-counts .c-inspection {
-  color: #ffd60a;
-}
-
-.header-counts .c-identity {
-  color: #bf8cff;
-}
-
+/* every stage count is plain white — the icon says which is which.
+   Only the deadline keeps a hue, because it is the one that shouts. */
 .header-counts .c-due {
   color: var(--bad);
 }
@@ -235,11 +220,11 @@ textarea {
   background-image: linear-gradient(#ff453a, #ff453a);
 }
 
-.header-btn {
+.icon-btn.header-btn {
   position: relative;
   width: 41px;
   height: 41px;
-  border-radius: 50%;
+  border-radius: 13px;
   background: var(--surface-2);
   border: none;
   color: var(--text-2);
@@ -255,11 +240,9 @@ textarea {
 }
 
 .header-btn.accent {
-  width: 37px;
-  height: 37px;
-  background: #339cff;
-  background-image: linear-gradient(#339cff, #339cff);
-  color: var(--on-accent);
+  background: var(--solid);
+  background-image: linear-gradient(var(--solid), var(--solid));
+  color: var(--on-solid);
 }
 
 .header-btn.accent:active {
@@ -286,40 +269,6 @@ textarea {
 
 .group-toggle.ok {
   color: var(--ok);
-}
-
-.list-caption.cap-take::before,
-.list-caption.cap-reg::before,
-.list-caption.cap-pickup::before,
-.list-caption.cap-inspection::before,
-.list-caption.cap-identity::before {
-  content: '';
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  margin-right: 7px;
-  vertical-align: 1px;
-}
-
-.list-caption.cap-take::before {
-  background: var(--accent);
-}
-
-.list-caption.cap-reg::before {
-  background: var(--accent-2);
-}
-
-.list-caption.cap-pickup::before {
-  background: var(--warn);
-}
-
-.list-caption.cap-inspection::before {
-  background: #ffd60a;
-}
-
-.list-caption.cap-identity::before {
-  background: #bf8cff;
 }
 
 .list-caption-row {
@@ -791,17 +740,6 @@ textarea {
 
 .day-tasks {
   margin-bottom: 4px;
-}
-
-.list-caption.cap-day::before {
-  content: '';
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  margin-right: 7px;
-  vertical-align: 1px;
-  background: var(--text-2);
 }
 
 .task-strip {
@@ -2017,12 +1955,12 @@ body {
 /* Some forced-dark implementations (Samsung Internet) remap gradient
    fills as well; opaque inset box-shadows are never touched, so the
    bright accent fills get repainted once more on top of everything. */
-.header-btn.accent {
-  box-shadow: inset 0 0 0 99px #339cff;
-}
-
 .btn-dot {
   box-shadow: inset 0 0 0 99px #ff453a;
+}
+
+.header-btn.accent {
+  box-shadow: inset 0 0 0 99px var(--solid);
 }
 
 .group-toggle.active,

@@ -3,9 +3,9 @@ from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 
-from saskaitos.excel import append_invoices, existing_invoice_numbers
+from saskaitos.excel import HEADER_ROW, HEADERS, TABLE, append_invoices, existing_invoice_numbers
 from saskaitos.parser import parse_text, to_number
 
 # Tekstas tokio pat išdėstymo, kokį pdfplumber grąžina iš tiekėjo sąskaitos.
@@ -67,10 +67,39 @@ class ExcelTest(unittest.TestCase):
             append_invoices(path, [parse_text(SAMPLE, "a.pdf")])
             append_invoices(path, [parse_text(SAMPLE.replace("700001", "700002"), "b.pdf")])
             self.assertEqual(existing_invoice_numbers(path), {"700001", "700002"})
-            rows = list(load_workbook(path)["Saskaitos"].iter_rows(values_only=True))
-            self.assertEqual(len(rows), 3)
-            self.assertEqual(rows[1][:5], ("700001", rows[1][1], "SJNJ12TB0U1234567", 1574, 153))
-            self.assertEqual(rows[1][8], 26827.6)
+            ws = load_workbook(path)["Sąskaitos"]
+            self.assertEqual([c.value for c in ws[HEADER_ROW]], HEADERS)
+            rows = list(ws.iter_rows(min_row=HEADER_ROW + 1, values_only=True))
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0][2:5], ("SJNJ12TB0U1234567", 1574, 153))
+            self.assertEqual(rows[0][8], 26827.6)
+            self.assertEqual(ws.tables[TABLE].ref, f"A{HEADER_ROW}:I{HEADER_ROW + 2}")
+
+    def test_missing_field_highlighted(self):
+        with TemporaryDirectory() as d:
+            path = Path(d) / "out.xlsx"
+            append_invoices(path, [parse_text(SAMPLE.replace("CO2: 153,00 ", ""), "a.pdf")])
+            cell = load_workbook(path)["Sąskaitos"].cell(HEADER_ROW + 1, 5)
+            self.assertIsNone(cell.value)
+            self.assertIsNotNone(cell.comment)
+
+    def test_old_format_is_migrated(self):
+        with TemporaryDirectory() as d:
+            path = Path(d) / "out.xlsx"
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Saskaitos"
+            ws.append(["Invoice number", "Invoice date", "VIN", "Kerb weight", "CO2", "Color", "Decor",
+                       "Factory code", "Total sum", "Failas", "Įkelta", "Pastabos"])
+            ws.append(["600001", date(2026, 1, 2), "SJNJ12TB0U7654321", 1500, 140.0, "Red", "X", "F", 100.0,
+                       "x.pdf", None, None])
+            wb.save(path)
+            append_invoices(path, [parse_text(SAMPLE, "a.pdf")])
+            self.assertEqual(existing_invoice_numbers(path), {"600001", "700001"})
+            self.assertTrue((Path(d) / "out (senas formatas).xlsx").exists())
+            new = load_workbook(path)
+            self.assertEqual(new.sheetnames, ["Sąskaitos"])
+            self.assertEqual(new["Sąskaitos"].max_column, len(HEADERS))
 
 
 if __name__ == "__main__":

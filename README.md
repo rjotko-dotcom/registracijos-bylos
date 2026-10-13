@@ -20,9 +20,15 @@ Ištraukiami laukai:
 | Factory code | TDZNLEWJ12UGC-G-MJ |
 | Total sum | 26 827,60 |
 
-Papildomai įrašoma: failo pavadinimas, įkėlimo laikas ir pastabos (jei kurio
-nors lauko nepavyko rasti – eilutė vis tiek įrašoma, o pastaboje raudonai
-nurodoma, ko trūksta).
+Excel failas – tvarkingas sąskaitų registras: Nissan logotipas, pavadinimas,
+suvestinė (sąskaitų skaičius ir bendra suma – skaičiuojama tik pagal
+filtruotas eilutes), juoda antraštė su filtrais, užfiksuota antraštės eilutė,
+skaičių/datų formatai ir paruoštas spausdinimas (A4, gulsčias, telpa į plotį).
+Jei kurio nors lauko sąskaitoje nerasta – langelis pažymimas rausvai, o
+užvedus pelę rodomas komentaras; abejotina reikšmė (pvz. VIN) – oranžiškai.
+
+Jei turite ankstesnės versijos `saskaitos.xlsx`, jis automatiškai perrašomas
+nauju formatu, o senasis išsaugomas kaip `saskaitos (senas formatas).xlsx`.
 
 ### Diegimas (vieną kartą)
 

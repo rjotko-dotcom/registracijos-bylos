@@ -166,7 +166,7 @@ def extract_text(pdf_path: str | Path) -> str:
         with pdfplumber.open(str(pdf_path)) as pdf:
             pages = [page.extract_text() or "" for page in pdf.pages]
     except Exception as exc:  # sugadintas / užšifruotas PDF ir pan.
-        raise InvoiceError(f"Nepavyko atidaryti PDF: {exc}") from exc
+        raise InvoiceError("Failas pažeistas arba tai nėra PDF – nepavyko atidaryti.") from exc
     text = "\n".join(pages)
     if not text.strip():
         raise InvoiceError(

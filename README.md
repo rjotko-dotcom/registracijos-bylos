@@ -32,6 +32,15 @@ nurodoma, ko trūksta).
 Arba sukurkite vieną `Saskaitos.exe`, kurį galima nusikopijuoti į bet kurį
 kompiuterį be Python: paleiskite `sukurti_exe.bat`, rezultatas – `dist\Saskaitos.exe`.
 
+### Išvaizda
+
+Langas sukurtas pagal Nissan stilių: juoda antraštė su Nissan logotipu,
+Nissan raudona (#C3002F) akcentams, balti paviršiai ir pilki tonai.
+Lange matyti: failų įmetimo laukas su apdorojimo eiga, suvestinės kortelės
+(įrašyta / su pastabomis / jau buvo / klaidos) ir rezultatų lentelė
+(dukart spustelėjus eilutę rodomi visi ištraukti duomenys). Excel failo vietą
+galima pakeisti apačioje („Keisti…“) – ji įsimenama.
+
 ### Naudojimas
 
 - Paleiskite `paleisti.bat` (arba `Saskaitos.exe`) ir įmeskite PDF į langą
@@ -39,8 +48,8 @@ kompiuterį be Python: paleiskite `sukurti_exe.bat`, rezultatas – `dist\Saskai
 - Arba tiesiog nutempkite PDF failus ant `paleisti.bat` / `Saskaitos.exe`.
 - Mygtukas **Atidaryti Excel** atidaro rezultatų failą.
 
-Excel failas kuriamas šalia programos. Kitą vietą galima nurodyti aplinkos
-kintamuoju `SASKAITOS_EXCEL`.
+Excel failas pagal nutylėjimą kuriamas šalia programos. Vietą galima pakeisti
+lange („Keisti…“) arba aplinkos kintamuoju `SASKAITOS_EXCEL`.
 
 ### Apsaugos
 
@@ -54,3 +63,8 @@ kintamuoju `SASKAITOS_EXCEL`.
 ```
 python -m unittest discover -s tests
 ```
+
+### Logotipas
+
+`saskaitos/assets/nissan_logo.svg` – originalas. PNG ir ICO failai sugeneruoti
+su `tools/generate_assets.py` (reikia paleisti tik pakeitus logotipą).

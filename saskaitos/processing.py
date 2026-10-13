@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from .excel import append_invoices, existing_invoice_numbers
 from .parser import Invoice, InvoiceError, parse_invoice
@@ -34,12 +35,19 @@ def collect_files(paths: list[str | Path]) -> list[Path]:
     return files
 
 
-def process_files(paths: list[str | Path], excel_path: Path) -> list[Result]:
+def process_files(
+    paths: list[str | Path],
+    excel_path: Path,
+    on_progress: Callable[[int, int, str], None] | None = None,
+) -> list[Result]:
     results: list[Result] = []
     to_write: list[Invoice] = []
     known = existing_invoice_numbers(excel_path)
 
-    for path in collect_files(paths):
+    files = collect_files(paths)
+    for index, path in enumerate(files, start=1):
+        if on_progress:
+            on_progress(index, len(files), path.name)
         if path.suffix.lower() not in SUPPORTED:
             results.append(Result(path.name, "error", "Nepalaikomas failo tipas (kol kas tik PDF)."))
             continue

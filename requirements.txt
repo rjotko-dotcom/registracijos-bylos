@@ -1,4 +1,5 @@
 pdfplumber>=0.11
 openpyxl>=3.1
-# neprivaloma – leidžia įmesti failus į langą pele (drag & drop)
+pillow>=10
+# drag & drop – failų įmetimas į langą pele
 tkinterdnd2>=0.4

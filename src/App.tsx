@@ -301,7 +301,8 @@ export default function App() {
     return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m).slice(0, 8)
   }, [cases])
 
-  // archive statistics in vehicles, not cases — a fleet of 5 counts as 5
+  // archive statistics in vehicles, not cases — a fleet of 5 counts as 5.
+  // With a manager picked, the totals are theirs alone.
   const archiveStats = useMemo(() => {
     const now = new Date()
     let allCases = 0
@@ -310,6 +311,7 @@ export default function App() {
     let monthVehicles = 0
     cases.forEach((it) => {
       if (!it.completed) return
+      if (managerFilter && it.manager !== managerFilter) return
       allCases++
       allVehicles += vehiclesOf(it)
       if (it.completedAt) {
@@ -321,7 +323,7 @@ export default function App() {
       }
     })
     return { allCases, allVehicles, monthCases, monthVehicles }
-  }, [cases, today])
+  }, [cases, today, managerFilter])
 
   const todayLabel = useMemo(() => {
     const d = new Date()
@@ -774,7 +776,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            {view === 'archive' ? (
+            {view === 'archive' && !managerFilter ? (
               <button
                 type="button"
                 className="icon-btn header-btn"
@@ -787,7 +789,7 @@ export default function App() {
                 <Icon name="back" size={23} />
               </button>
             ) : null}
-            {view === 'active' && managerFilter ? (
+            {managerFilter ? (
               <button
                 type="button"
                 className="icon-btn header-btn"
@@ -797,9 +799,9 @@ export default function App() {
                 <Icon name="back" size={23} />
               </button>
             ) : null}
-            {view === 'active' && managerFilter ? (
+            {managerFilter ? (
               <div className="header-summary">
-                <span className="header-date">Vadybininkas</span>
+                <span className="header-date">{view === 'archive' ? 'Archyvas' : 'Vadybininkas'}</span>
                 <span className="header-manager">{managerFilter}</span>
               </div>
             ) : view === 'active' ? (
@@ -939,10 +941,10 @@ export default function App() {
               ) : (
                 <>
                   <p className="list-caption">
-                    {`Archyve: ${archiveStats.allCases} ${bylosWord(archiveStats.allCases)} · ${archiveStats.allVehicles} ${autoWord(archiveStats.allVehicles)}`}
+                    {`${managerFilter ? 'Užbaigta' : 'Archyve'}: ${archiveStats.allCases} ${bylosWord(archiveStats.allCases)} · ${archiveStats.allVehicles} ${autoWord(archiveStats.allVehicles)}`}
                   </p>
                   <p className="section-hint">
-                    {`Šį mėnesį užbaigta: ${archiveStats.monthCases} ${bylosWord(archiveStats.monthCases)} · ${archiveStats.monthVehicles} ${autoWord(archiveStats.monthVehicles)}`}
+                    {`Šį mėnesį${managerFilter ? '' : ' užbaigta'}: ${archiveStats.monthCases} ${bylosWord(archiveStats.monthCases)} · ${archiveStats.monthVehicles} ${autoWord(archiveStats.monthVehicles)}`}
                   </p>
                 </>
               )}

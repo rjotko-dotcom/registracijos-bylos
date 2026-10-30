@@ -96,5 +96,41 @@ await page.click("button[aria-label='Rodyti visų vadybininkų bylas']")
 await page.waitForTimeout(400)
 if ((await page.locator('.case-model').count()) !== 3) fail('the header back button did not clear the filter')
 
+// ---------- the archive counts one manager's work ----------
+await seed([
+  { id: 'q1', model: 'Viena', completed: true, completedAt: Date.now() },
+  { id: 'q2', model: 'Fleetas', fleet: true, vehicleCount: 5, fleetVehicles: [{ model: 'Juke', count: 5 }], completed: true, completedAt: Date.now() },
+  { id: 'q3', model: 'Rokui', manager: 'Rokas V.', fleet: true, vehicleCount: 3, fleetVehicles: [{ model: 'Kona', count: 3 }], completed: true, completedAt: Date.now() },
+])
+await page.reload({ waitUntil: 'networkidle' })
+await page.waitForTimeout(500)
+await page.click("button[aria-label='Archyvas']")
+await page.waitForTimeout(500)
+
+let stats = await page.locator('.list-caption').first().textContent()
+if (!stats.includes('3 bylos') || !stats.includes('9 automobiliai'))
+  fail('archive totals wrong before filtering: ' + stats)
+
+await page.locator(".case-card:has-text('Fleetas') .manager-link").first().click()
+await page.waitForTimeout(600)
+stats = await page.locator('.list-caption').first().textContent()
+// Mantas keeps a plain case and a fleet of five: two cases, six cars
+if (!stats.includes('2 bylos') || !stats.includes('6 automobiliai'))
+  fail("the archive should count only the picked manager's work: " + stats)
+if (!(await page.locator('.section-hint').textContent()).includes('6 automobiliai'))
+  fail('the month line should be scoped to the manager too')
+if ((await page.locator('.header-manager').textContent()) !== 'Mantas J.')
+  fail('the archive header should name the manager')
+if (await page.locator("button[aria-label='Grįžti į aktyvias bylas']").count())
+  fail('in the archive the arrow should clear the filter first, not leave the archive')
+
+// clearing drops back to the whole archive, not to the active list
+await page.click("button[aria-label='Rodyti visų vadybininkų bylas']")
+await page.waitForTimeout(500)
+stats = await page.locator('.list-caption').first().textContent()
+if (!stats.includes('3 bylos')) fail('clearing the filter should restore the archive totals: ' + stats)
+if (!(await page.locator("button[aria-label='Grįžti į aktyvias bylas']").count()))
+  fail('the archive arrow should be back once nothing is filtered')
+
 console.log(process.exitCode ? 'UI: FAILURES' : 'UI: ALL PASS')
 await browser.close()

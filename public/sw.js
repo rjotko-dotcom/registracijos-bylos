@@ -1,6 +1,6 @@
 /* Offline cache for the installed app. Navigations go network-first so new
    versions arrive immediately; hashed assets are cached forever. */
-const CACHE = 'bylos-v1'
+const CACHE = 'bylos-v2'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

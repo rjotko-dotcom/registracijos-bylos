@@ -210,7 +210,7 @@ textarea {
   display: inline-block;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  animation: count-pop 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation: count-pop 0.3s var(--ease-out);
 }
 
 @keyframes count-pop {
@@ -223,6 +223,17 @@ textarea {
    Only the deadline keeps a hue, because it is the one that shouts. */
 .header-counts .c-due {
   color: var(--bad);
+}
+
+/* the filtered-by-manager header: the name takes the place of the counts */
+.header-manager {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-title {
@@ -290,14 +301,45 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.09em;
   color: var(--text-3);
-  padding: 2px 4px 10px;
+  /* the top padding is what a card scrolls behind once the title sticks */
+  padding: 9px 4px 10px;
+  font-variant-numeric: tabular-nums;
 }
 
+.list-caption strong {
+  font-weight: 700;
+  display: inline-block;
+  animation: count-pop 0.3s var(--ease-out);
+}
+
+.list-section + .list-section,
 .case-list + .list-caption,
 .case-list + .list-caption-row,
 .manager-group + .list-caption,
 .manager-group + .list-caption-row {
-  margin-top: 20px;
+  margin-top: 13px;
+}
+
+/* A section title parks itself just below the header while its own cards are
+   on screen, so a long list never leaves you guessing which pile you are in.
+   Sticky is bounded by .list-section, so each title hands over to the next
+   instead of all of them piling up at the top. */
+.sticky-cap {
+  position: sticky;
+  top: calc(var(--header-h, 54px) - 1px);
+  z-index: 6;
+}
+
+/* the black backing has to run the full width of the phone, past the gutters */
+.sticky-cap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  left: calc(-1 * (var(--safe-left) + var(--gutter)));
+  right: calc(-1 * (var(--safe-right) + var(--gutter)));
+  background: var(--bg);
+  background-image: linear-gradient(var(--bg), var(--bg));
+  z-index: -1;
 }
 
 .group-toggle.ok {
@@ -334,7 +376,12 @@ textarea {
   margin-bottom: 6px;
   transition:
     color 0.15s ease,
-    background-color 0.15s ease;
+    background-color 0.15s ease,
+    transform 0.16s var(--ease-spring);
+}
+
+.group-toggle:active {
+  transform: scale(0.92);
 }
 
 .group-toggle.active {
@@ -422,11 +469,11 @@ textarea {
   overflow: hidden;
   position: relative;
   animation: card-in 0.3s var(--ease-out) backwards;
-  transition: transform var(--t-fast) ease;
+  transition: transform 0.18s var(--ease-spring);
 }
 
 .case-card:active {
-  transform: scale(0.992);
+  transform: scale(0.986);
 }
 
 .case-list .case-card:nth-child(2) {
@@ -467,7 +514,7 @@ textarea {
   touch-action: pan-y;
   position: relative;
   background: var(--surface);
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.45s var(--ease-out);
 }
 
 .case-row.dragging {
@@ -502,7 +549,7 @@ textarea {
   transform: scale(0.7);
   transition:
     opacity 0.22s ease,
-    transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1.2),
+    transform 0.28s var(--ease-spring),
     color 0.2s ease,
     background-color 0.2s ease;
 }
@@ -598,6 +645,28 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
+}
+
+/* the manager's name narrows the list to their cases — underlined so it reads
+   as something you can press, without turning into a coloured link */
+.manager-link {
+  font: inherit;
+  color: inherit;
+  padding: 2px 5px;
+  margin: -2px -5px;
+  border-radius: 7px;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+  text-underline-offset: 2.5px;
+  text-decoration-thickness: 1px;
+  transition:
+    background-color var(--t-fast) ease,
+    color var(--t-fast) ease;
+}
+
+.manager-link:active {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .case-fleet {
@@ -703,7 +772,23 @@ textarea {
   justify-content: center;
   flex-shrink: 0;
   border-radius: 50%;
-  transition: transform 0.12s ease;
+  transition:
+    transform 0.16s var(--ease-spring),
+    color var(--t-fast) ease,
+    background-color var(--t-fast) ease;
+}
+
+/* the tech-sheet glyph is keyed on its state, so it remounts and pops once
+   every time the sheet is picked up or put back */
+.doc-btn svg {
+  animation: icon-pop 0.3s var(--ease-spring);
+}
+
+@keyframes icon-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
 }
 
 .icon-btn:active {
@@ -780,6 +865,11 @@ textarea {
   background-image: linear-gradient(var(--surface), var(--surface));
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--r-ctl);
+  transition: transform 0.18s var(--ease-spring);
+}
+
+.task-strip:active {
+  transform: scale(0.99);
 }
 
 .task-strip-text {
@@ -820,6 +910,11 @@ textarea {
   color: var(--text-3);
   cursor: pointer;
   animation: strip-in 0.22s ease;
+  transition: background-color var(--t-fast) ease;
+}
+
+.note-strip:active {
+  background-color: var(--surface-3);
 }
 
 .note-strip svg {
@@ -850,7 +945,7 @@ textarea {
 .notes-wrap {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.28s ease;
+  transition: grid-template-rows var(--t-med) var(--ease-out);
 }
 
 .notes-wrap.open {
@@ -863,17 +958,21 @@ textarea {
   padding: 0 14px;
   border-top: 1px solid transparent;
   visibility: hidden;
+  opacity: 0;
   transition:
-    border-color 0.28s ease,
-    visibility 0s linear 0.28s;
+    border-color var(--t-med) ease,
+    opacity 0.18s ease,
+    visibility 0s linear var(--t-med);
 }
 
 .notes-wrap.open .notes-inner {
   border-top-color: var(--line);
   padding-bottom: 14px;
   visibility: visible;
+  opacity: 1;
   transition:
-    border-color 0.28s ease,
+    border-color var(--t-med) ease,
+    opacity 0.22s ease 0.06s,
     visibility 0s;
 }
 
@@ -1074,7 +1173,7 @@ textarea {
   border: none;
   border-radius: 26px 26px 0 0;
   padding: 24px 20px calc(var(--safe-bottom) + 24px);
-  animation: slide-up 0.24s cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation: slide-up 0.24s var(--ease-out);
 }
 
 .dialog-title {
@@ -1261,7 +1360,7 @@ textarea {
   border-radius: 50%;
   background: var(--text-2);
   transition:
-    transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1),
+    transform 0.18s var(--ease-out),
     background-color 0.18s ease;
 }
 
@@ -1630,7 +1729,7 @@ textarea {
   background-image: linear-gradient(var(--surface), var(--surface));
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--r-ctl);
-  animation: card-in 0.25s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  animation: card-in 0.25s var(--ease-out) backwards;
 }
 
 .todo-check {
@@ -1725,7 +1824,7 @@ textarea {
   background-image: linear-gradient(var(--bg), var(--bg));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  animation: sheet-in 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation: sheet-in 0.32s var(--ease-out);
   transition: transform 0.24s cubic-bezier(0.5, 0, 0.75, 0.4);
 }
 
@@ -1764,7 +1863,7 @@ textarea {
   color: var(--text);
   z-index: 40;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  animation: toast-up 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation: toast-up 0.22s var(--ease-out);
 }
 
 .undo-toast button {

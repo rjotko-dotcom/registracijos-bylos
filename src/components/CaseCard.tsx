@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RegistrationCase } from '../types'
 import { daysUntil } from '../dates'
+import { tap } from '../haptics'
 import { BrandLogo } from './BrandLogo'
 import { Icon } from './Icon'
 
@@ -16,6 +17,8 @@ interface CaseCardProps {
   onRestore?: (id: string) => void
   onConvertToRegistration: (id: string) => void
   onRequestDelete: (id: string) => void
+  /* absent once a manager filter is already on — there is nothing left to narrow */
+  onFilterManager?: (manager: string) => void
 }
 
 const SWIPE_TRIGGER = 88
@@ -37,6 +40,7 @@ export function CaseCard({
   onRestore,
   onConvertToRegistration,
   onRequestDelete,
+  onFilterManager,
 }: CaseCardProps) {
   const [noteDraft, setNoteDraft] = useState(item.notes)
   const [saved, setSaved] = useState(false)
@@ -77,6 +81,7 @@ export function CaseCard({
       document.execCommand('copy')
       ta.remove()
     }
+    tap(12)
     setCopiedField(field)
     window.clearTimeout(copyTimer.current)
     copyTimer.current = window.setTimeout(() => setCopiedField(null), 1400)
@@ -131,6 +136,7 @@ export function CaseCard({
   )
 
   const handleSaveNotes = () => {
+    tap(15)
     onSaveNotes(item.id, noteDraft.trim())
     setSaved(true)
     window.clearTimeout(savedTimer.current)
@@ -151,7 +157,7 @@ export function CaseCard({
     longPress.current = {
       timer: window.setTimeout(() => {
         longPress.current.fired = true
-        navigator.vibrate?.(15)
+        tap(15)
         onEdit(item.id)
       }, 550),
       fired: false,
@@ -191,7 +197,7 @@ export function CaseCard({
           if (swipe.current.active) {
             swipe.current.armed = true
             setHoldArmed(true)
-            navigator.vibrate?.(20)
+            tap(20)
           }
         }, HOLD_MS)
       }
@@ -293,7 +299,22 @@ export function CaseCard({
             VIN: {item.vin || '—'} <span className="dot">•</span> {item.regNumber || '—'}
           </div>
           <div className="case-meta">
-            {item.manager} <span className="dot">•</span> {item.date}
+            {onFilterManager && item.manager ? (
+              <button
+                type="button"
+                className="manager-link"
+                aria-label={`Rodyti tik vadybininko ${item.manager} bylas`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onFilterManager(item.manager)
+                }}
+              >
+                {item.manager}
+              </button>
+            ) : (
+              item.manager
+            )}{' '}
+            <span className="dot">•</span> {item.date}
           </div>
           {item.fleet && <div className="case-fleet">Fleet ({item.vehicleCount})</div>}
           {resDiff !== null && (
@@ -351,6 +372,7 @@ export function CaseCard({
           }}
         >
           <Icon
+            key={item.techSheet}
             name={item.techSheet === 'needed' ? 'fileWarn' : item.techSheet === 'have' ? 'fileCheck' : 'fileOff'}
             size={21}
           />

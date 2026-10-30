@@ -9,6 +9,7 @@ import { NotesScreen, type RoutineItem, type TodoItem } from './components/Notes
 import { Icon } from './components/Icon'
 import { useScrolled } from './useScrolled'
 import { daysUntil } from './dates'
+import { tap } from './haptics'
 
 type View = 'active' | 'archive' | 'notes'
 
@@ -113,6 +114,8 @@ export default function App() {
   const [view, setView] = useState<View>('active')
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  // tapping a manager's name on a card narrows the list down to their cases
+  const [managerFilter, setManagerFilter] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [formClosing, setFormClosing] = useState(false)
@@ -155,6 +158,7 @@ export default function App() {
     }
     return { date: new Date().toDateString(), done: [] }
   })
+  const headerRef = useRef<HTMLElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrolled = useScrolled()
@@ -242,20 +246,25 @@ export default function App() {
     if (searchOpen) searchInputRef.current?.focus()
   }, [searchOpen])
 
-  const toTakeCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.stage === 'take' && it.caseType === 'registracija').length,
-    [cases],
-  )
-  const inspectionCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.caseType === 'apziura').length,
-    [cases],
-  )
-  const identityCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.caseType === 'tapatybe').length,
-    [cases],
-  )
-  const atRegitraCount = useMemo(
-    () => cases.filter((it) => !it.completed && it.stage === 'regitra').length,
+  // the section titles stick directly under the header, so they need to know
+  // how tall it currently is — it changes with the safe-area inset and when a
+  // second count appears
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const apply = () =>
+      document.documentElement.style.setProperty('--header-h', `${el.offsetHeight}px`)
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [view])
+
+  // the header carries two numbers only, so it never grows past one line: how
+  // many cars are open in total, and how many must reach Regitra today. The
+  // per-section breakdown is already written beside every section title.
+  const activeVehicles = useMemo(
+    () => cases.reduce((sum, it) => (it.completed ? sum : sum + vehiclesOf(it)), 0),
     [cases],
   )
   // the day's to-do list from Užrašai, pinned above the cases so the jobs that
@@ -266,7 +275,6 @@ export default function App() {
     () => cases.filter((it) => !it.completed && it.stage === 'pickup'),
     [cases],
   )
-  const toPickupCount = pickupCases.length
   // cases that must reach Regitra today (or should already have)
   const dueTodayCount = useMemo(
     () => cases.filter((it) => !it.completed && it.stage === 'take' && reservationRank(it) === 0).length,
@@ -324,22 +332,27 @@ export default function App() {
 
   const visible = useMemo(() => {
     const inView = cases.filter((it) => (view === 'active' ? !it.completed : it.completed))
-    const filtered = searchOpen ? inView.filter((it) => matchesQuery(it, query)) : inView
+    const byManager = managerFilter ? inView.filter((it) => it.manager === managerFilter) : inView
+    const filtered = searchOpen ? byManager.filter((it) => matchesQuery(it, query)) : byManager
     // active view: oldest first — the case that arrived first gets driven first
     return [...filtered].sort((a, b) =>
       view === 'active'
         ? a.date.localeCompare(b.date) || a.createdAt - b.createdAt
         : (b.completedAt ?? 0) - (a.completedAt ?? 0),
     )
-  }, [cases, view, searchOpen, query])
+  }, [cases, view, searchOpen, query, managerFilter])
 
-  useFlipAnimations([cases, view, groupByManager, searchOpen, query])
+  useFlipAnimations([cases, view, groupByManager, searchOpen, query, managerFilter])
 
   const update = (id: string, patch: Partial<RegistrationCase>) =>
     setCases((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)))
 
-  const handleToggleExpand = (id: string) => setExpandedId((cur) => (cur === id ? null : id))
-  const handleToggleTechSheet = (id: string) =>
+  const handleToggleExpand = (id: string) => {
+    tap(8)
+    setExpandedId((cur) => (cur === id ? null : id))
+  }
+  const handleToggleTechSheet = (id: string) => {
+    tap(14)
     setCases((prev) =>
       prev.map((it) =>
         it.id === id && it.techSheet !== 'none'
@@ -347,6 +360,19 @@ export default function App() {
           : it,
       ),
     )
+  }
+  const handleFilterManager = (name: string) => {
+    if (!name) return
+    tap(14)
+    setExpandedId(null)
+    setManagerFilter(name)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  const clearManagerFilter = () => {
+    tap(10)
+    setManagerFilter(null)
+    setExpandedId(null)
+  }
   // a held right-swipe walks the case one step around the workflow loop, so an
   // accidental step can be corrected with the same gesture that caused it
   const handleAdvanceStage = (id: string) => {
@@ -378,13 +404,15 @@ export default function App() {
     if (!item || item.caseType === 'registracija') return
     const before = { caseType: item.caseType, stage: item.stage, regitraAt: item.regitraAt }
     setExpandedId(null)
-    navigator.vibrate?.(20)
+    tap(20)
     update(id, { caseType: 'registracija', stage: 'regitra', regitraAt: item.regitraAt ?? Date.now() })
     showUndo('Atiduota Regitrai', () => update(id, before))
   }
 
-  const toggleTodo = (id: string) =>
+  const toggleTodo = (id: string) => {
+    tap(14)
     setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+  }
 
   const handleRequestComplete = (id: string) => {
     const item = cases.find((it) => it.id === id)
@@ -429,7 +457,7 @@ export default function App() {
   const handleConfirmComplete = () => {
     if (confirmId) {
       const id = confirmId
-      navigator.vibrate?.(30)
+      tap(30)
       setExpandedId(null)
       animateOut(id, () => {
         update(id, { completed: true, completedAt: Date.now() })
@@ -443,7 +471,7 @@ export default function App() {
   const handleBulkComplete = (ids: string[]) => {
     setBulkOpen(false)
     if (ids.length === 0) return
-    navigator.vibrate?.(30)
+    tap(30)
     setExpandedId(null)
     animateOut(ids, () => {
       const now = Date.now()
@@ -463,7 +491,7 @@ export default function App() {
       const id = deleteId
       const removed = cases.find((it) => it.id === id)
       setExpandedId(null)
-      navigator.vibrate?.(30)
+      tap(30)
       animateOut(id, () => {
         setCases((prev) => prev.filter((it) => it.id !== id))
         if (removed) showUndo('Byla ištrinta', () => setCases((prev) => [removed, ...prev]))
@@ -473,6 +501,7 @@ export default function App() {
   }
 
   const handleUndo = () => {
+    tap(20)
     undo?.action()
     window.clearTimeout(undoTimer.current)
     setUndo(null)
@@ -498,6 +527,7 @@ export default function App() {
   }
 
   const handleSubmitForm = (draft: CaseDraft) => {
+    tap(18)
     const now = Date.now()
     if (editingId) {
       const prev = cases.find((it) => it.id === editingId)
@@ -628,6 +658,7 @@ export default function App() {
     (pendingImport ? 1 : 0) +
     (bulkOpen ? 1 : 0) +
     (searchOpen ? 1 : 0) +
+    (managerFilter ? 1 : 0) +
     (view !== 'active' ? 1 : 0)
   const layerDepthRef = useRef(0)
   const popSelf = useRef(0) // popstates caused by our own history.go()
@@ -646,6 +677,9 @@ export default function App() {
       setBulkOpen(false)
     } else if (searchOpen) {
       closeSearch()
+    } else if (managerFilter) {
+      setManagerFilter(null)
+      setExpandedId(null)
     } else if (view !== 'active') {
       setView('active')
       setExpandedId(null)
@@ -706,12 +740,13 @@ export default function App() {
         onAddRoutine={(text) =>
           setRoutines((prev) => [...prev, { id: `r${Date.now().toString(36)}`, text }])
         }
-        onToggleRoutine={(id) =>
+        onToggleRoutine={(id) => {
+          tap(14)
           setRoutineState((prev) => ({
             ...prev,
             done: prev.done.includes(id) ? prev.done.filter((d) => d !== id) : [...prev.done, id],
           }))
-        }
+        }}
         onDeleteRoutine={(id) => setRoutines((prev) => prev.filter((r) => r.id !== id))}
         onMemoChange={setMemo}
         onBack={() => setView('active')}
@@ -721,7 +756,7 @@ export default function App() {
 
   return (
     <div className="screen">
-      <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
+      <header ref={headerRef} className={`app-header${scrolled ? ' scrolled' : ''}`}>
         {searchOpen ? (
           <div className="search-bar">
             <Icon name="search" size={19} className="search-bar-icon" />
@@ -752,47 +787,34 @@ export default function App() {
                 <Icon name="back" size={23} />
               </button>
             ) : null}
-            {view === 'active' ? (
+            {view === 'active' && managerFilter ? (
+              <button
+                type="button"
+                className="icon-btn header-btn"
+                aria-label="Rodyti visų vadybininkų bylas"
+                onClick={clearManagerFilter}
+              >
+                <Icon name="back" size={23} />
+              </button>
+            ) : null}
+            {view === 'active' && managerFilter ? (
+              <div className="header-summary">
+                <span className="header-date">Vadybininkas</span>
+                <span className="header-manager">{managerFilter}</span>
+              </div>
+            ) : view === 'active' ? (
               <div className="header-summary">
                 <span className="header-date">{todayLabel}</span>
                 <span
                   className="header-counts"
-                  aria-label={`Vežti ${toTakeCount}, Regitroje ${atRegitraCount}, paimti ${toPickupCount}${
-                    inspectionCount > 0 ? `, apžiūra ${inspectionCount}` : ''
-                  }${
-                    identityCount > 0 ? `, tapatybė ${identityCount}` : ''
-                  }${
+                  aria-label={`Aktyvių automobilių ${activeVehicles}${
                     dueTodayCount > 0 ? `, šiandien atiduoti ${dueTodayCount}` : ''
                   }`}
                 >
-                  {toTakeCount > 0 && (
+                  {activeVehicles > 0 && (
                     <span className="hc-item c-take">
                       <Icon name="car" size={15} strokeWidth={2.1} />
-                      <strong key={`t${toTakeCount}`}>{toTakeCount}</strong>
-                    </span>
-                  )}
-                  {atRegitraCount > 0 && (
-                    <span className="hc-item c-reg">
-                      <Icon name="landmark" size={14} strokeWidth={2.1} />
-                      <strong key={`r${atRegitraCount}`}>{atRegitraCount}</strong>
-                    </span>
-                  )}
-                  {toPickupCount > 0 && (
-                    <span className="hc-item c-pickup">
-                      <Icon name="inbox" size={15} strokeWidth={2.1} />
-                      <strong key={`p${toPickupCount}`}>{toPickupCount}</strong>
-                    </span>
-                  )}
-                  {inspectionCount > 0 && (
-                    <span className="hc-item c-inspection">
-                      <Icon name="wrench" size={14} strokeWidth={2.1} />
-                      <strong key={`w${inspectionCount}`}>{inspectionCount}</strong>
-                    </span>
-                  )}
-                  {identityCount > 0 && (
-                    <span className="hc-item c-identity">
-                      <Icon name="idCard" size={15} strokeWidth={2.1} />
-                      <strong key={`i${identityCount}`}>{identityCount}</strong>
+                      <strong key={`t${activeVehicles}`}>{activeVehicles}</strong>
                     </span>
                   )}
                   {dueTodayCount > 0 && (
@@ -807,7 +829,7 @@ export default function App() {
               <h1 className="header-title">Archyvas</h1>
             )}
             <div className="header-actions">
-              {view === 'active' && (
+              {view === 'active' && !managerFilter && (
                 <button
                   type="button"
                   className="icon-btn header-btn has-badge"
@@ -824,7 +846,7 @@ export default function App() {
                   )}
                 </button>
               )}
-              {view === 'active' && (
+              {view === 'active' && !managerFilter && (
                 <button
                   type="button"
                   className="icon-btn header-btn"
@@ -863,7 +885,7 @@ export default function App() {
         )}
       </header>
 
-      {view === 'active' && !(searchOpen && query.trim() !== '') && pendingTodos.length > 0 && (
+      {view === 'active' && !managerFilter && !(searchOpen && query.trim() !== '') && pendingTodos.length > 0 && (
         <section className="day-tasks">
           <p className="list-caption">Darbai · {pendingTodos.length}</p>
           {pendingTodos.map((t) => (
@@ -884,6 +906,13 @@ export default function App() {
 
       {(() => {
         const searching = searchOpen && query.trim() !== ''
+        // the count is keyed on itself, so it remounts and pops whenever a case
+        // moves between sections
+        const cap = (label: string, n: number) => (
+          <>
+            {label} · <strong key={n}>{n}</strong>
+          </>
+        )
         const renderCard = (item: RegistrationCase) => (
           <CaseCard
             key={item.id}
@@ -898,6 +927,7 @@ export default function App() {
             onRestore={view === 'archive' ? handleRestore : undefined}
             onConvertToRegistration={handleConvertToRegistration}
             onRequestDelete={(id) => setDeleteId(id)}
+            onFilterManager={managerFilter ? undefined : handleFilterManager}
           />
         )
 
@@ -992,22 +1022,25 @@ export default function App() {
               <>
                 {/* a section only exists while it holds something */}
                 {toTake.length > 0 && (
-                  <>
-                    <p className="list-caption cap-take">Vežti · {toTake.length}</p>
+                  <section className="list-section">
+                    <p className="list-caption sticky-cap cap-take">{cap('Vežti', toTake.length)}</p>
                     <main className="case-list">{toTake.map(renderCard)}</main>
-                  </>
+                  </section>
                 )}
 
                 {atRegitra.length > 0 && (
-                  <>
-                    <div className="list-caption-row">
-                      <p className="list-caption cap-reg">Regitroje · {atRegitra.length}</p>
+                  <section className="list-section">
+                    <div className="list-caption-row sticky-cap">
+                      <p className="list-caption cap-reg">{cap('Regitroje', atRegitra.length)}</p>
                       <div className="caption-actions">
                         <button
                           type="button"
                           className="group-toggle"
                           aria-label="Kopijuoti sąrašą"
-                          onClick={() => handleCopyList('regitra')}
+                          onClick={() => {
+                            tap(12)
+                            handleCopyList('regitra')
+                          }}
                         >
                           <Icon name="copy" size={15} />
                         </button>
@@ -1017,7 +1050,10 @@ export default function App() {
                             className={`group-toggle${groupByManager ? ' active' : ''}`}
                             aria-label="Grupuoti pagal vadybininką"
                             aria-pressed={groupByManager}
-                            onClick={() => setGroupByManager((v) => !v)}
+                            onClick={() => {
+                              tap(12)
+                              setGroupByManager((v) => !v)
+                            }}
                           >
                             <Icon name="users" size={16} />
                           </button>
@@ -1036,19 +1072,22 @@ export default function App() {
                     ) : (
                       <main className="case-list">{atRegitra.map(renderCard)}</main>
                     )}
-                  </>
+                  </section>
                 )}
 
                 {toPickup.length > 0 && (
-                  <>
-                    <div className="list-caption-row">
-                      <p className="list-caption cap-pickup">Paimti iš Regitros · {toPickup.length}</p>
+                  <section className="list-section">
+                    <div className="list-caption-row sticky-cap">
+                      <p className="list-caption cap-pickup">{cap('Paimti iš Regitros', toPickup.length)}</p>
                       <div className="caption-actions">
                         <button
                           type="button"
                           className="group-toggle"
                           aria-label="Kopijuoti paėmimo sąrašą"
-                          onClick={() => handleCopyList('pickup')}
+                          onClick={() => {
+                            tap(12)
+                            handleCopyList('pickup')
+                          }}
                         >
                           <Icon name="copy" size={15} />
                         </button>
@@ -1063,21 +1102,21 @@ export default function App() {
                       </div>
                     </div>
                     <main className="case-list">{toPickup.map(renderCard)}</main>
-                  </>
+                  </section>
                 )}
 
                 {inspection.length > 0 && (
-                  <>
-                    <p className="list-caption cap-inspection">Apžiūra · {inspection.length}</p>
+                  <section className="list-section">
+                    <p className="list-caption sticky-cap cap-inspection">{cap('Apžiūra', inspection.length)}</p>
                     <main className="case-list">{inspection.map(renderCard)}</main>
-                  </>
+                  </section>
                 )}
 
                 {identity.length > 0 && (
-                  <>
-                    <p className="list-caption cap-identity">Tapatybė · {identity.length}</p>
+                  <section className="list-section">
+                    <p className="list-caption sticky-cap cap-identity">{cap('Tapatybė', identity.length)}</p>
                     <main className="case-list">{identity.map(renderCard)}</main>
-                  </>
+                  </section>
                 )}
               </>
             )}

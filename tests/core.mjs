@@ -72,7 +72,7 @@ await page.reload({ waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
 c = await caps()
 if (c.length !== 1 || !c[0].startsWith('Vežti')) fail('empty sections should not render: ' + c.join(' | '))
-if (await page.locator('.hc-item.c-reg').count()) fail('zero counts should stay out of the header')
+if (await page.locator('.hc-item.c-due').count()) fail('zero counts should stay out of the header')
 
 // ---------- the stage loop ----------
 await drag(".case-card:has-text('Vezama') .case-row", 130)

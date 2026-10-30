@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><rect width="512" height="512" rx="114" fill="#000"/>
+  <g fill="#fff">
+    <!-- the sheet behind: only its left and bottom edges ever show, so its top-right is cut away -->
+    <path d="M141 141H278V209H332a19 19 0 0 1 19 19V393a19 19 0 0 1-19 19H141a19 19 0 0 1-19-19V160a19 19 0 0 1 19-19Z"/>
+    <!-- the front sheet, haloed in black so the stack reads as two sheets -->
+    <path d="M195 97H278a12 12 0 0 1 12 12V185a12 12 0 0 0 12 12H368a22 22 0 0 1 22 22V351a22 22 0 0 1-22 22H195a22 22 0 0 1-22-22V119a22 22 0 0 1 22-22Z"
+          stroke="#000" stroke-width="24" stroke-linejoin="round" paint-order="stroke"/>
+    <!-- the folded corner -->
+    <path d="M311 130.7L311 176L356.3 176Z" stroke="#fff" stroke-width="18" stroke-linejoin="round"/>
+  </g>
+  <g fill="#000">
+    <rect x="208" y="215" width="144" height="21" rx="10.5"/>
+    <rect x="208" y="255" width="144" height="21" rx="10.5"/>
+    <rect x="208" y="296" width="101" height="21" rx="10.5"/>
+  </g>
+</svg>
